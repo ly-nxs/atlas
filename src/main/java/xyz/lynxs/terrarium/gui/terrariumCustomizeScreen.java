@@ -11,6 +11,8 @@ import net.minecraft.util.Formatting;
 import xyz.lynxs.terrarium.TerrariumConfig;
 import xyz.lynxs.terrarium.preset.presetConfig;
 
+import java.nio.file.Path;
+
 import static xyz.lynxs.terrarium.Terrarium.CONFIG;
 import static xyz.lynxs.terrarium.Terrarium.MOD_ID;
 import static xyz.lynxs.terrarium.Util.gridToLatLon;
@@ -27,7 +29,7 @@ public class terrariumCustomizeScreen extends Screen {
     public terrariumCustomizeScreen(CreateWorldScreen parent) {
         super(ScreenTexts.EMPTY);
         this.parent = parent;
-        config = new presetConfig(13, 768, 64, 400000, 800000, 2, 0.01);
+        config = new presetConfig();
         latlon = gridToLatLon(config.adjustXoffset, config.adjustZoffset,(int) (256 * Math.pow(2, config.zoom)));
     }
 
@@ -98,11 +100,11 @@ public class terrariumCustomizeScreen extends Screen {
 
         doneButton = ButtonWidget.builder(ScreenTexts.DONE, (btn) -> {
             CONFIG = config;
-            TerrariumConfig.save(CONFIG, "./saves/" + parent.getWorldCreator().getWorldDirectoryName() + "/terrarium.json", false);
+            TerrariumConfig.save(CONFIG, Path.of("./saves/" + parent.getWorldCreator().getWorldDirectoryName() + "/terrarium.json"), false);
             this.client.setScreen(parent);
         }).dimensions((this.width / 2) - (buttonWidth + buttonPadding), this.height - (buttonPadding + buttonHeight) , buttonWidth, buttonHeight).build();
         cancelButton = ButtonWidget.builder(ScreenTexts.CANCEL, (btn) -> {
-            CONFIG = new presetConfig(13, 768, 64, 400000, 800000, 2, 0.01);
+            CONFIG = new presetConfig();
             this.client.setScreen(parent);
         }).dimensions((this.width/2) + buttonPadding, this.height - (buttonPadding + buttonHeight), buttonWidth, buttonHeight).build();
 

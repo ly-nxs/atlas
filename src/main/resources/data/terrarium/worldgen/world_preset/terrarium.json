@@ -207,9 +207,9 @@
           "noise_weight": -0.5
         }
       ],
-      "settings": "minecraft:overworld"
+      "settings": "terrarium:terrarium"
     },
-        "settings": "minecraft:overworld"
+        "settings": "terrarium:terrarium"
       }
     },
     "minecraft:the_end": {

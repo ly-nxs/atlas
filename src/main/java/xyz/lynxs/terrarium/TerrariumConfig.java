@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.nio.file.Path;
 
 
 public class TerrariumConfig {
@@ -23,13 +24,13 @@ public class TerrariumConfig {
             .disableHtmlEscaping()
             .create();
 
-    private static File getFile(String filename, boolean type, String worldDir) {
-        return type ? FabricLoader.getInstance().getConfigDir().resolve(filename).toFile() : new File(worldDir);
+    private static File getFile(Path filename, boolean type) {
+        return type ? FabricLoader.getInstance().getConfigDir().resolve(filename).toFile() : filename.toFile();
     }
 
-    public static <T> @NotNull T load(Class<T> clazz, String filename) {
+    public static <T> @NotNull T load(Class<T> clazz, Path filename, boolean type) {
 
-        var file = getFile(filename, true, null);
+        var file = getFile(filename, type);
         T config = null;
 
         if (file.exists()) {
@@ -54,13 +55,13 @@ public class TerrariumConfig {
             }
         }
 
-        TerrariumConfig.save(config,  filename, true);
+        TerrariumConfig.save(config,  filename, type);
         return config;
     }
 
-    public static <T> void save(T config, String filename, boolean type) {
+    public static <T> void save(T config, Path filename, boolean type) {
 
-        File file = getFile(filename, type, filename);
+        File file = getFile(filename, type);
         if (!file.getParentFile().exists()) {
             if (!file.getParentFile().mkdir()) {
                 System.err.println("Failed to create a directory for " + file);

@@ -4,18 +4,15 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.CodecHolder;
 import net.minecraft.world.gen.surfacebuilder.MaterialRules;
-
-import static xyz.lynxs.terrarium.Terrarium.CONFIG;
-import static xyz.lynxs.terrarium.world.gen.HeightProvider.getElevation;
+import xyz.lynxs.terrarium.Terrarium;
 
 
 public class TerrariumRegistries {
 
     public static void register() {
-        Registry.register(Registries.MATERIAL_CONDITION, Identifier.of("minecraft", "above_preliminary_surface"), AboveSurfaceMaterialCondition.CODEC.codec());
+        Registry.register(Registries.MATERIAL_CONDITION, Terrarium.id("terrarium"), AboveSurfaceMaterialCondition.CODEC.codec());
     }
 
     /**
@@ -43,8 +40,8 @@ public class TerrariumRegistries {
 
                 @Override
                 protected boolean test() {
-                    double elevation = getElevation(this.context.blockX + CONFIG.adjustXoffset, this.context.blockZ + CONFIG.adjustZoffset);
-                    return this.context.blockY > elevation - AboveSurfaceMaterialCondition.this.depth;
+
+                    return this.context.blockY > materialRuleContext.estimateSurfaceHeight() - AboveSurfaceMaterialCondition.this.depth;
                 }
             }
             return new AboveSurfacePredicate();
