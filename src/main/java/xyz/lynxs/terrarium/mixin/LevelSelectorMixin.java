@@ -16,7 +16,7 @@ import xyz.lynxs.terrarium.gui.terrariumCustomizeScreen;
 
 
 // why the fuck does mojang hardcode everything??
-@Deprecated
+
 @Mixin(LevelScreenProvider.class)
 interface LevelSelectorMixin {
 
