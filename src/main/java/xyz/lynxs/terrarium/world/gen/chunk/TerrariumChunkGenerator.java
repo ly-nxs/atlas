@@ -41,7 +41,6 @@ import xyz.lynxs.terrarium.world.gen.biome.TerrariumBiomeSource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static xyz.lynxs.terrarium.Terrarium.CONFIG;
