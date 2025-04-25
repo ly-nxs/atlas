@@ -4,6 +4,7 @@ package xyz.lynxs.terrarium.mixin;
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.WorldGenerationProgressListener;
+import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.server.world.ServerChunkLoadingManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureTemplateManager;
@@ -43,21 +44,8 @@ public class ThreadedAnvilChunkStorageMixin {
                     target = "Lnet/minecraft/world/gen/chunk/ChunkGenerator;createStructurePlacementCalculator(Lnet/minecraft/registry/RegistryWrapper;Lnet/minecraft/world/gen/noise/NoiseConfig;J)Lnet/minecraft/world/gen/chunk/placement/StructurePlacementCalculator;",
                     shift = At.Shift.BEFORE)
     )
-    private void atlas_populateNoises(
-            ServerWorld world,
-            LevelStorage.Session session,
-            DataFixer dataFixer,
-            StructureTemplateManager structureTemplateManager,
-            Executor executor,
-            ThreadExecutor<Runnable> mainThreadExecutor,
-            ChunkProvider chunkProvider,
-            ChunkGenerator chunkGenerator,
-            WorldGenerationProgressListener worldGenerationProgressListener,
-            ChunkStatusChangeListener chunkStatusChangeListener,
-            Supplier<PersistentStateManager> persistentStateManagerFactory,
-            int viewDistance,
-            boolean dsync,
-            CallbackInfo ci
+    private void terrarium_populateNoises(
+            ServerWorld world, LevelStorage.Session session, DataFixer dataFixer, StructureTemplateManager structureTemplateManager, Executor executor, ThreadExecutor mainThreadExecutor, ChunkProvider chunkProvider, ChunkGenerator chunkGenerator, WorldGenerationProgressListener worldGenerationProgressListener, ChunkStatusChangeListener chunkStatusChangeListener, Supplier persistentStateManagerFactory, ChunkTicketManager ticketManager, int viewDistance, boolean dsync, CallbackInfo ci
     ) {
         if (chunkGenerator instanceof TerrariumChunkGenerator terrariumChunkGenerator) {
             this.noiseConfig = NoiseConfig.create(

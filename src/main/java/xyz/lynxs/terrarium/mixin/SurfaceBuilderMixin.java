@@ -50,7 +50,7 @@ public abstract class SurfaceBuilderMixin implements TerrariumSurfaceBuilderAcce
             public void setState(int y, BlockState state) {
                 HeightLimitView heightLimitView = chunk.getHeightLimitView();
                 if (y >= heightLimitView.getBottomY() && y < heightLimitView.getTopYInclusive()) {
-                    chunk.setBlockState(mutable.setY(y), state, false);
+                    chunk.setBlockState(mutable.setY(y), state, 0);
                     if (!state.getFluidState().isEmpty()) {
                         chunk.markBlockForPostProcessing(mutable);
                     }

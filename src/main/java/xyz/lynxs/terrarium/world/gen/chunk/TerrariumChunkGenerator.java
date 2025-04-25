@@ -245,7 +245,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
                                     } else {
                                         state = AIR;
                                     }
-                                    chunk.setBlockState(mutable, state, false);
+                                    chunk.setBlockState(mutable, state, 0);
                                     surfaceHeightmap.trackUpdate(blockX & 0xF, blockY, blockZ & 0xF, state);
                                     oceanHeightmap.trackUpdate(blockX & 0xF, blockY, blockZ & 0xF, state);
                                 } else {
