@@ -28,7 +28,6 @@ import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ProtoChunk;
-import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.StructureWeightSampler;
@@ -42,6 +41,7 @@ import xyz.lynxs.terrarium.world.gen.biome.TerrariumBiomeSource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static xyz.lynxs.terrarium.Terrarium.CONFIG;
@@ -103,9 +103,10 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         return CODEC;
     }
 
+
+
     @Override
-    @SuppressWarnings("deprecation")
-    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk2, GenerationStep.Carver carverStep) {
+    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk2) {
 
         BiomeAccess biomeAccess2 = biomeAccess.withSource((biomeX, biomeY, biomeZ) -> this.biomeSource.getBiome(biomeX, biomeY, biomeZ, noiseConfig.getMultiNoiseSampler()));
         ChunkRandom chunkRandom = new ChunkRandom(new CheckedRandom(RandomSeed.getSeed()));
@@ -116,14 +117,14 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         CarverContext carverContext = new CarverContext(new NoiseChunkGenerator(this.biomeSource, this.settings),
                 /*this is fine because the only thing the NCG is used for is like, the height limit or something*/
                 chunkRegion.getRegistryManager(), chunk2.getHeightLimitView(), chunkNoiseSampler, noiseConfig, this.settings.value().surfaceRule());
-        CarvingMask carvingMask = ((ProtoChunk) chunk2).getOrCreateCarvingMask(carverStep);
+        CarvingMask carvingMask = ((ProtoChunk) chunk2).getOrCreateCarvingMask();
         for (int j = -i; j <= i; ++j) {
             for (int k = -i; k <= i; ++k) {
                 ChunkPos chunkPos2 = new ChunkPos(chunkPos.x + j, chunkPos.z + k);
                 Chunk chunk22 = chunkRegion.getChunk(chunkPos2.x, chunkPos2.z);
                 RegistryEntry<Biome> biome = this.biomeSource.getBiome(BiomeCoords.fromBlock(chunkPos2.getStartX()), 0, BiomeCoords.fromBlock(chunkPos2.getStartZ()), noiseConfig.getMultiNoiseSampler());
                 GenerationSettings generationSettings = chunk22.getOrCreateGenerationSettings(() -> this.getGenerationSettings(biome));
-                Iterable<RegistryEntry<ConfiguredCarver<?>>> iterable = generationSettings.getCarversForStep(carverStep);
+                Iterable<RegistryEntry<ConfiguredCarver<?>>> iterable = generationSettings.getCarversForStep();
                 int l = 0;
                 for (RegistryEntry<ConfiguredCarver<?>> registryEntry : iterable) {
                     ConfiguredCarver<?> configuredCarver = registryEntry.value();
@@ -143,7 +144,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
             return;
         }
         HeightContext heightContext = new HeightContext(this, region);
-        this.buildSurface(chunk, heightContext, noiseConfig, structures, region.getBiomeAccess(), region.getRegistryManager().get(RegistryKeys.BIOME), Blender.getBlender(region));
+        this.buildSurface(chunk, heightContext, noiseConfig, structures, region.getBiomeAccess(), region.getRegistryManager().getOrThrow(RegistryKeys.BIOME), Blender.getBlender(region));
     }
 
     @VisibleForTesting
@@ -156,7 +157,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
     @Override
     public void populateEntities(ChunkRegion region) {
         ChunkPos chunkPos = region.getCenterPos();
-        RegistryEntry<Biome> registryEntry = region.getBiome(chunkPos.getStartPos().withY(region.getTopY() - 1));
+        RegistryEntry<Biome> registryEntry = region.getBiome(chunkPos.getStartPos().withY(region.getTopYInclusive() - 1));
         ChunkRandom chunkRandom = new ChunkRandom(new CheckedRandom(RandomSeed.getSeed()));
         chunkRandom.setPopulationSeed(region.getSeed(), chunkPos.getStartX(), chunkPos.getStartZ());
         SpawnHelper.populateEntities(region, registryEntry, chunkPos, chunkRandom);
@@ -181,7 +182,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         int minimumCellY = MathHelper.floorDiv(generationShapeConfig.minimumY(), generationShapeConfig.verticalCellBlockCount());
         int cellHeight = MathHelper.floorDiv(generationShapeConfig.height(), generationShapeConfig.verticalCellBlockCount());
         if (x < -16 || z < -16) return CompletableFuture.completedFuture(chunk);
-        return CompletableFuture.supplyAsync(Util.debugSupplier("wgen_fill_noise", () -> this.populateNoise(chunk, structureAccessor, blender, noiseConfig, minimumCellY, cellHeight)), Util.getMainWorkerExecutor());
+        return CompletableFuture.supplyAsync(Util.debugSupplier(() -> this.populateNoise(chunk, structureAccessor, blender, noiseConfig, minimumCellY, cellHeight), () -> "wgen_fill_noise"), Util.getMainWorkerExecutor());
     }
 
     private Chunk populateNoise(Chunk chunk, StructureAccessor accessor, Blender blender, NoiseConfig noiseConfig, int minimumCellY, int cellHeight) {
@@ -322,12 +323,13 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public void getDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
+    public void appendDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
         text.add(
                 "[Terrarium] Elevation: " + getFromMap(pos.getX(), pos.getZ()) +
                         ", Cords: " + Arrays.toString(gridToLatLon(pos.getX() + CONFIG.adjustXoffset, pos.getZ() + CONFIG.adjustZoffset, size))
         );
     }
+
 
     private ChunkNoiseSampler createChunkNoiseSampler(Chunk chunk, StructureAccessor world, Blender blender, NoiseConfig noiseConfig) {
         return ChunkNoiseSampler.create(

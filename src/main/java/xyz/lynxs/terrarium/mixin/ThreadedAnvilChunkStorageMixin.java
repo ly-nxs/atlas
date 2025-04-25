@@ -62,7 +62,7 @@ public class ThreadedAnvilChunkStorageMixin {
         if (chunkGenerator instanceof TerrariumChunkGenerator terrariumChunkGenerator) {
             this.noiseConfig = NoiseConfig.create(
                     terrariumChunkGenerator.getSettings().value(),
-                    world.getRegistryManager().getWrapperOrThrow(RegistryKeys.NOISE_PARAMETERS),
+                    world.getRegistryManager().getOrThrow(RegistryKeys.NOISE_PARAMETERS),
                     world.getSeed()
             );
         }
