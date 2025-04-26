@@ -24,7 +24,7 @@ public class terrariumCustomizeScreen extends Screen {
     private Slider zoomSlider, worldHeightSlider, xOffsetSlider, zOffsetSlider, noiseScaleSlider, monthSlider;
     private double[] latlon;
     private final presetConfig config;
-
+    private boolean once = false;
 
     public terrariumCustomizeScreen(CreateWorldScreen parent) {
         super(ScreenTexts.EMPTY);
@@ -86,7 +86,7 @@ public class terrariumCustomizeScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-
+        if(!once){this.renderBackground(context); once = true;}
         // Minecraft doesn't have a "label" widget, so we'll have to draw our own text.
         // We'll subtract the font height from the Y position to make the text appear above the button.
         // Subtracting an extra 10 pixels will give the text some padding.

@@ -31,7 +31,7 @@ public class TerrariumBiomeSource extends BiomeSource {
     private final Double noiseScales;
 
 
-    public static final MapCodec<TerrariumBiomeSource> CODEC = RecordCodecBuilder.mapCodec(instance ->
+    public static final Codec<TerrariumBiomeSource> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     BiomeEntry.CODEC.listOf().fieldOf("biomes").forGetter(source -> source.biomeEntries),
                     ChunkGeneratorSettings.REGISTRY_CODEC.fieldOf("settings").forGetter(source -> source.settings),
@@ -68,7 +68,7 @@ public class TerrariumBiomeSource extends BiomeSource {
     }
 
     @Override
-    protected MapCodec<? extends BiomeSource> getCodec() {
+    protected Codec<? extends BiomeSource> getCodec() {
         return CODEC;
     }
 

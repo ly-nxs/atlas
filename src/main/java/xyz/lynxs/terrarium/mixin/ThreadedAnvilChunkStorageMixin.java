@@ -4,7 +4,7 @@ package xyz.lynxs.terrarium.mixin;
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.WorldGenerationProgressListener;
-import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.thread.ThreadExecutor;
@@ -30,7 +30,7 @@ import java.util.function.Supplier;
  * this mixin ensures that when the world is created, the noise samplers in the density functions get populated with
  * samplers generated from the world seed
  */
-@Mixin(ServerChunkLoadingManager.class)
+@Mixin(ThreadedAnvilChunkStorage.class)
 public class ThreadedAnvilChunkStorageMixin {
     @Mutable
     @Shadow
@@ -43,7 +43,7 @@ public class ThreadedAnvilChunkStorageMixin {
                     target = "Lnet/minecraft/world/gen/chunk/ChunkGenerator;createStructurePlacementCalculator(Lnet/minecraft/registry/RegistryWrapper;Lnet/minecraft/world/gen/noise/NoiseConfig;J)Lnet/minecraft/world/gen/chunk/placement/StructurePlacementCalculator;",
                     shift = At.Shift.BEFORE)
     )
-    private void atlas_populateNoises(
+    private void terrarium_populateNoises(
             ServerWorld world,
             LevelStorage.Session session,
             DataFixer dataFixer,

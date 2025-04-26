@@ -1,8 +1,8 @@
 package xyz.lynxs.terrarium.world.gen.chunk;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.mojang.serialization.Codec;
 import xyz.lynxs.terrarium.accessor.TerrariumSurfaceBuilderAccessor;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.BlockState;
@@ -42,6 +42,7 @@ import xyz.lynxs.terrarium.world.gen.biome.TerrariumBiomeSource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 import static xyz.lynxs.terrarium.Terrarium.CONFIG;
@@ -81,7 +82,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         return this.settings;
     }
 
-    public static final MapCodec<TerrariumChunkGenerator> CODEC = RecordCodecBuilder.mapCodec(
+    public static final Codec<TerrariumChunkGenerator> CODEC = RecordCodecBuilder.create(
             instance -> instance.group(
                     TerrariumBiomeSource.CODEC // Use your biome source's CODEC
                             .fieldOf("biome_source")
@@ -99,7 +100,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
     /**
      */
     @Override
-    protected MapCodec<? extends ChunkGenerator> getCodec() {
+    protected Codec<? extends ChunkGenerator> getCodec() {
         return CODEC;
     }
 
@@ -168,7 +169,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public CompletableFuture<Chunk> populateNoise(Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
+    public CompletableFuture<Chunk> populateNoise(Executor executor, Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
         GenerationShapeConfig generationShapeConfig = this.settings.value().generationShapeConfig().trimHeight(chunk.getHeightLimitView());
         int k = MathHelper.floorDiv(generationShapeConfig.height(), generationShapeConfig.verticalSize());
         if (k <= 0) {
