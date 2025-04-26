@@ -37,7 +37,7 @@ public class Util {
         short[][] result = new short[height][width];
 
         for (int i = 0; i < height; i++) {
-            System.arraycopy(source[y1 + i], x1, result[i], 0, width);
+            System.arraycopy(source[Math.min(y1 + i, source.length - 1)], x1, result[i], 0, width);
         }
         return result;
     }

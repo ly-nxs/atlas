@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+
 import java.nio.file.Path;
 
 import static xyz.lynxs.terrarium.TerrariumConfig.load;
@@ -63,6 +64,7 @@ public class Terrarium implements ModInitializer {
                 id("chunk_generator"),
                 TerrariumChunkGenerator.CODEC
         );
+
         TerrariumRegistries.register();
         ServerWorldEvents.LOAD.register(Terrarium::onServerWorldLoad);
 

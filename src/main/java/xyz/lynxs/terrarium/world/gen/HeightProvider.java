@@ -3,6 +3,7 @@ package xyz.lynxs.terrarium.world.gen;
 
 import xyz.lynxs.terrarium.Terrarium;
 import org.slf4j.Logger;
+import xyz.lynxs.terrarium.Util;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -92,5 +93,16 @@ public class HeightProvider {
         int xPixel = x - (xTile * 256);
         int zPixel = z - (zTile * 256);
         return elevMap.computeIfAbsent(pack(xTile, zTile), k -> toIntHeightmap(getElevationFromHeightmap(xTile, zTile)))[xPixel][zPixel];
+    }
+
+    public static short[][] getChunk(int x, int z){
+        if(elevMap.size() > 32) elevMap.clear();
+        x = x - (x % 16);
+        z = z - (z % 16);
+        int xTile = x / 256;
+        int zTile = z / 256;
+        int xPixel = x - (xTile * 256);
+        int zPixel = z - (zTile * 256);
+        return Util.getSubArraySystemCopy(elevMap.computeIfAbsent(pack(xTile, zTile), k -> toIntHeightmap(getElevationFromHeightmap(xTile, zTile))), xPixel, zPixel, xPixel + 16, zPixel + 16);
     }
 }
