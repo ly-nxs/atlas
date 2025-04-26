@@ -75,9 +75,14 @@ public class HeightProvider {
         short[][] arr = new short[image.getWidth()][image.getHeight()];
         for(int i = 0; i < image.getWidth(); i++){
             for(int j = 0; j < image.getHeight(); j++){
+                int rgb = image.getRGB(i, j);
 
-                Color rgb = new Color(image.getRGB(i, j));
-                double elevation = (rgb.getRed() * 256 + rgb.getGreen() + rgb.getBlue() / 256.0) - 32768;
+                int red = (rgb >> 16) & 0xFF;
+                int green = (rgb >> 8) & 0xFF;
+                int blue = rgb & 0xFF;
+
+                double elevation = (red * 256 + green + blue / 256.0) - 32768.0;
+
                 arr[i][j] = (short) ((elevation / 8850) * CONFIG.worldHeight);
 
             }
@@ -87,22 +92,8 @@ public class HeightProvider {
 
 
     public static short getElevation(int x, int z) {
-        if(elevMap.size() > 32) elevMap.clear();
-        int xTile = x / 256;
-        int zTile = z / 256;
-        int xPixel = x - (xTile * 256);
-        int zPixel = z - (zTile * 256);
-        return elevMap.computeIfAbsent(pack(xTile, zTile), k -> toIntHeightmap(getElevationFromHeightmap(xTile, zTile)))[xPixel][zPixel];
+        return elevMap.computeIfAbsent(pack(x / 256, z / 256), k -> toIntHeightmap(getElevationFromHeightmap(x / 256, z / 256)))[x % 256][z % 256];
     }
 
-    public static short[][] getChunk(int x, int z){
-        if(elevMap.size() > 32) elevMap.clear();
-        x = x - (x % 16);
-        z = z - (z % 16);
-        int xTile = x / 256;
-        int zTile = z / 256;
-        int xPixel = x - (xTile * 256);
-        int zPixel = z - (zTile * 256);
-        return Util.getSubArraySystemCopy(elevMap.computeIfAbsent(pack(xTile, zTile), k -> toIntHeightmap(getElevationFromHeightmap(xTile, zTile))), xPixel, zPixel, xPixel + 16, zPixel + 16);
-    }
+
 }

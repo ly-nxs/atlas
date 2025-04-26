@@ -57,7 +57,7 @@ public class terrariumCustomizeScreen extends Screen {
             return value;
         });
         xOffsetSlider = new Slider(sliderPadding,this.textRenderer.fontHeight + sliderPadding * 3 + sliderHeight * 3, sliderWidth, sliderHeight, config.adjustXoffset, 0, (int) (256 * Math.pow(2, config.zoom)), Text.translatable(MOD_ID + ".text.slider.x_offset"), Slider.Format.INT, (slider, value)-> {
-            config.adjustXoffset =  ((int) slider.scaleValue(value) - ((int) (slider.scaleValue(value) )% 16));
+            config.adjustXoffset =  ((int) slider.scaleValue(value) - ((int) (slider.scaleValue(value)) % 16));
             latlon = gridToLatLon(config.adjustXoffset, config.adjustZoffset, (int) (256 * Math.pow(2, config.zoom)));
             return value;
         });

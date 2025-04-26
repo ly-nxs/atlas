@@ -1,8 +1,6 @@
 package xyz.lynxs.terrarium.world.gen.chunk;
 
 import com.google.common.annotations.VisibleForTesting;
-import net.minecraft.util.dynamic.CodecHolder;
-import net.minecraft.world.gen.densityfunction.DensityFunction;
 import xyz.lynxs.terrarium.accessor.TerrariumSurfaceBuilderAccessor;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -28,7 +26,6 @@ import net.minecraft.world.biome.GenerationSettings;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ProtoChunk;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.StructureAccessor;
@@ -179,9 +176,6 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         int x = (chunk.getPos().x << 4) + CONFIG.adjustXoffset;
         int z = (chunk.getPos().z << 4) + CONFIG.adjustZoffset;
 
-
-        int minimumCellY = MathHelper.floorDiv(generationShapeConfig.minimumY(), generationShapeConfig.verticalCellBlockCount());
-        int cellHeight = MathHelper.floorDiv(generationShapeConfig.height(), generationShapeConfig.verticalCellBlockCount());
         if (x < -16 || z < -16) return CompletableFuture.completedFuture(chunk);
         return CompletableFuture.supplyAsync(Util.debugSupplier(() -> this.populateNoise(chunk), () -> "wgen_fill_noise"), Util.getMainWorkerExecutor());
     }
@@ -194,15 +188,16 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         int j = chunkPos.getStartZ();
         BlockPos.Mutable mutable = new BlockPos.Mutable();
         BlockState defaultFluid = this.settings.value().defaultFluid();
+
         for (int ii = 0; ii < 16; ii++) {
             for(int jj = 0; jj < 16; jj++){
 
-                for(int yy = 0; yy < this.settings.value().generationShapeConfig().height(); yy++){
+                for(int yy = this.settings.value().generationShapeConfig().minimumY(); yy < this.settings.value().generationShapeConfig().height(); yy++){
                     mutable.set(i + ii, yy, j + jj);
                     int seaLevel = 64;
                     int elevation = getFromMap(i + ii, j + jj);
                     BlockState state;
-                    if (elevation - yy <= 10) {
+
                         if (yy <= seaLevel && yy >= elevation) {
                             state = defaultFluid;
                         } else if (yy < elevation) {
@@ -210,17 +205,11 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
                         } else {
                             state = AIR;
                         }
+
                         chunk.setBlockState(mutable, state, 0);
                         surfaceHeightmap.trackUpdate((i + ii) & 0xF, yy, (j + jj) & 0xF, state);
                         oceanHeightmap.trackUpdate((i + ii) & 0xF, yy, (j + jj) & 0xF, state);
-                    }
-                    else {
-                        state = this.settings.value().defaultBlock();
-                        if ((SharedConstants.isOutsideGenerationArea(chunk.getPos())))
-                            continue;
-                        oceanHeightmap.trackUpdate(ii, yy, jj, state);
-                        surfaceHeightmap.trackUpdate(ii, yy, jj, state);
-                    }
+
                     mutable.set((i + ii), yy, (j + jj));
                     chunk.markBlockForPostProcessing(mutable);
                 }
