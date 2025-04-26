@@ -196,8 +196,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         BlockState defaultFluid = this.settings.value().defaultFluid();
         for (int ii = 0; ii < 16; ii++) {
             for(int jj = 0; jj < 16; jj++){
-                int q1 = chunk.countVerticalSections() - 1;
-                ChunkSection chunkSection = chunk.getSection(q1);
+
                 for(int yy = 0; yy < this.settings.value().generationShapeConfig().height(); yy++){
                     mutable.set(i + ii, yy, j + jj);
                     int seaLevel = 64;
