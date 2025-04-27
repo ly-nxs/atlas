@@ -172,7 +172,7 @@
         },
         {
           "biome": "minecraft:cherry_grove",
-          "precipitation": 0.75,
+          "precipitation": 0.6,
           "temperature": 0.25,
           "noise_weight": -0.5
         },

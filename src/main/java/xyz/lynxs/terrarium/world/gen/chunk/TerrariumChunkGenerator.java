@@ -177,7 +177,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         int z = (chunk.getPos().z << 4) + CONFIG.adjustZoffset;
 
         if (x < -16 || z < -16) return CompletableFuture.completedFuture(chunk);
-        return CompletableFuture.supplyAsync(Util.debugSupplier(() -> this.populateNoise(chunk), () -> "wgen_fill_noise"), Util.getMainWorkerExecutor());
+        return CompletableFuture.supplyAsync(Util.debugSupplier(() -> this.populateNoise(chunk), () -> "terrarium_cgen"), Util.getMainWorkerExecutor());
     }
 
     private Chunk populateNoise(Chunk chunk) {
@@ -191,11 +191,11 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
 
         for (int ii = 0; ii < 16; ii++) {
             for(int jj = 0; jj < 16; jj++){
-
+                int seaLevel = 64;
+                int elevation = getFromMap(i + ii, j + jj);
                 for(int yy = this.settings.value().generationShapeConfig().minimumY(); yy < this.settings.value().generationShapeConfig().height(); yy++){
                     mutable.set(i + ii, yy, j + jj);
-                    int seaLevel = 64;
-                    int elevation = getFromMap(i + ii, j + jj);
+
                     BlockState state;
 
                         if (yy <= seaLevel && yy >= elevation) {
@@ -209,9 +209,8 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
                         chunk.setBlockState(mutable, state, 0);
                         surfaceHeightmap.trackUpdate((i + ii) & 0xF, yy, (j + jj) & 0xF, state);
                         oceanHeightmap.trackUpdate((i + ii) & 0xF, yy, (j + jj) & 0xF, state);
-
-                    mutable.set((i + ii), yy, (j + jj));
-                    chunk.markBlockForPostProcessing(mutable);
+                        mutable.set((i + ii), yy, (j + jj));
+                        chunk.markBlockForPostProcessing(mutable);
                 }
             }
         }
