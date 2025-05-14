@@ -1,0 +1,17 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:savanna",
+    "minecraft:savanna_plateau",
+    "minecraft:wooded_badlands",
+    "minecraft:sparse_jungle",
+
+    {"id":"terralith:jungle_mountains", "required": false},
+    {"id":"terralith:haze_mountain","required": false},
+    {"id":"terralith:brushland","required": false},
+    {"id":"terralith:hot_shrubland","required": false},
+
+    {"id":"regions_unexplored:baobab_savanna","required": false},
+    {"id":"regions_unexplored:dry_bushland","required": false}
+  ]
+}

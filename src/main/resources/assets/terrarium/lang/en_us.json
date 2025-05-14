@@ -1,11 +1,13 @@
 {
   "generator.terrarium.terrarium": "Earth",
-  "terrarium.text.config_title": "Terrarium Config:",
+  "terrarium.text.config_title": "Terrarium Config",
   "terrarium.text.slider.biome_noise": "Biome Noise Scale",
   "terrarium.text.slider.zoom": "Zoom (Horizontal Scale)",
   "terrarium.text.slider.world_height": "Vertical Terrain Scale",
-  "terrarium.text.slider.x_offset": "X Offset",
-  "terrarium.text.slider.z_offset": "Z Offset",
+  "terrarium.text.slider.starting_y": "Starting Y",
+  "terrarium.text.slider.x_offset": "Longitude",
+  "terrarium.text.slider.z_offset": "Latitude",
   "terrarium.text.slider.month": "Month (Biome Placement)",
-  "terrarium.text.lat_lon": "Longitude: %1$s  Latitude: %2$s"
+  "terrarium.text.lat_lon": "Longitude: %1$s  Latitude: %2$s",
+  "terrarium.text.widget.config": "Config"
 }

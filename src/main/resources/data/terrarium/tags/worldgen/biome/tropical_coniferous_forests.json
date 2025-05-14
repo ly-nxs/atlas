@@ -1,0 +1,21 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:old_growth_pine_taiga",
+    "minecraft:old_growth_spruce_taiga",
+    "minecraft:old_growth_birch_forest",
+    "minecraft:plains",
+
+    {"id":"terralith:lush_valley","required": false},
+    {"id":"terralith:moonlight_valley","required": false},
+    {"id":"terralith:birch_taiga","required": false},
+
+    {"id":"regions_unexplored:blackwood_taiga","required": false},
+    {"id":"regions_unexplored:fen","required": false},
+    {"id":"regions_unexplored:fungal_fen","required": false},
+    {"id":"regions_unexplored:mountains","required": false},
+    {"id":"regions_unexplored:pine_taiga","required": false},
+    {"id":"regions_unexplored:redwoods","required": false},
+    {"id":"regions_unexplored:sparse_redwoods","required": false}
+  ]
+}

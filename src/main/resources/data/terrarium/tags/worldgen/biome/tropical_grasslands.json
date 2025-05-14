@@ -1,0 +1,19 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:savanna",
+    "minecraft:savanna_plateau",
+    "minecraft:desert",
+    "minecraft:wooded_badlands",
+    "minecraft:plains",
+
+    {"id":"terralith:red_oasis","required": false},
+    {"id":"terralith:hot_shrubland","required": false},
+    {"id":"terralith:arid_highlands","required": false},
+
+    {"id":"regions_unexplored:baobab_savanna","required": false},
+    {"id":"regions_unexplored:dry_bushland","required": false},
+    {"id":"regions_unexplored:outback","required": false},
+    {"id":"regions_unexplored:steppe","required": false}
+  ]
+}

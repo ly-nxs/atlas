@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import xyz.lynxs.terrarium.Terrarium;
-import xyz.lynxs.terrarium.gui.terrariumCustomizeScreen;
+import xyz.lynxs.terrarium.gui.TerrariumCustomizeScreen;
 
 
 // why the fuck does mojang hardcode everything??
@@ -33,7 +33,7 @@ interface LevelSelectorMixin {
         Map<Object, Object> map = new HashMap<>();
         map.put(k1, v1);
         map.put(k2, v2);
-        map.put(Optional.of(RegistryKey.of(RegistryKeys.WORLD_PRESET, Terrarium.id("terrarium"))), (LevelScreenProvider) (screen, ctx) -> new terrariumCustomizeScreen(screen));
+        map.put(Optional.of(RegistryKey.of(RegistryKeys.WORLD_PRESET, Terrarium.id("terrarium"))), (LevelScreenProvider) (screen, ctx) -> new TerrariumCustomizeScreen(screen));
         return map;
     }
 }

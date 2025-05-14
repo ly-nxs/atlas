@@ -1,0 +1,24 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:plains",
+    "minecraft:meadow",
+    "minecraft:sunflower_plains",
+    "minecraft:windswept_savanna",
+    "minecraft:birch_forest",
+
+    {"id":"terralith:valley_clearing","required": false},
+    {"id":"terralith:highlands","required": false},
+    {"id":"terralith:blooming_plateau","required": false},
+    {"id":"terralith:brushland","required": false},
+
+    {"id":"regions_unexplored:barley_fields","required": false},
+    {"id":"regions_unexplored:clover_plains","required": false},
+    {"id":"regions_unexplored:flower_fields","required": false},
+    {"id":"regions_unexplored:grassland","required": false},
+    {"id":"regions_unexplored:poppy_fields","required": false},
+    {"id":"regions_unexplored:prairie","required": false},
+    {"id":"regions_unexplored:rocky_meadow","required": false},
+    {"id":"regions_unexplored:shrubland","required": false}
+  ]
+}

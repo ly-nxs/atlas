@@ -1,0 +1,13 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:snowy_slopes",
+    "minecraft:frozen_peaks",
+    "minecraft:snowy_plains",
+
+    {"id":"terralith:ice_marsh","required": false},
+    {"id":"terralith:rocky_shrubland","required": false},
+
+    {"id":"regions_unexplored:frozen_tundra","required": false}
+  ]
+}

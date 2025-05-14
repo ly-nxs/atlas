@@ -1,0 +1,28 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:taiga",
+    "minecraft:grove",
+    "minecraft:snowy_taiga",
+    "minecraft:old_growth_pine_taiga",
+    "minecraft:old_growth_spruce_taiga",
+    "minecraft:meadow",
+
+    {"id":"terralith:alpine_grove", "required": false},
+    {"id":"terralith:alpine_highlands", "required": false},
+    {"id":"terralith:shield", "required": false},
+    {"id":"terralith:siberian_grove", "required": false},
+    {"id":"terralith:siberian_taiga", "required": false},
+    {"id":"terralith:snowy_maple_forest", "required": false},
+    {"id":"terralith:snowy_shield", "required": false},
+    {"id":"terralith:wintry_forest", "required": false},
+
+    {"id":"regions_unexplored:clover_plains", "required": false},
+    {"id":"regions_unexplored:cold_boreal_taiga", "required": false},
+    {"id":"regions_unexplored:cold_deciduous_forest", "required": false},
+    {"id":"regions_unexplored:frozen_pine_taiga", "required": false},
+    {"id":"regions_unexplored:highland_fields", "required": false},
+    {"id":"regions_unexplored:icy_heights", "required": false},
+    {"id":"regions_unexplored:spires", "required": false}
+  ]
+}

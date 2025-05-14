@@ -14,7 +14,8 @@ import java.nio.file.Path;
 
 public class TerrariumConfig {
     public URI ELEVATION_URL = URI.create("https://s3.amazonaws.com/elevation-tiles-prod/terrarium/");
-    public URI TEMPERATURE_URL = URI.create("https://raw.githubusercontent.com/ly-nxs/terrarium-data/refs/heads/main/tiles/climate-monthly/");
+    public URI WATER_URL = URI.create("https://data.lynxs.xyz/water/");
+    public URI BIOME_URL = URI.create("https://data.lynxs.xyz/biome/");
     public String CACHE_DIR = "./tiles";
 
 

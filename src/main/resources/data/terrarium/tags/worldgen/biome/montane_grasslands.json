@@ -1,0 +1,14 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:meadow",
+    "minecraft:snowy_plains",
+    "minecraft:snowy_slopes",
+    "minecraft:jagged_peaks",
+
+    {"id":"terralith:rocky_mountains","required": false},
+    {"id":"terralith:glacial_chasm","required": false},
+
+    {"id":"regions_unexplored:highland_fields","required": false}
+  ]
+}

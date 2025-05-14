@@ -1,138 +1,107 @@
 package xyz.lynxs.terrarium.world.gen.biome;
 
+import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
+import net.minecraft.registry.tag.BiomeTags;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.noise.PerlinNoiseSampler;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.biome.source.BiomeSource;
+import net.minecraft.world.biome.source.MultiNoiseBiomeSource;
+import net.minecraft.world.biome.source.MultiNoiseBiomeSourceParameterList;
 import net.minecraft.world.biome.source.util.MultiNoiseUtil;
-import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
-import xyz.lynxs.terrarium.world.gen.HeightProvider;
+import xyz.lynxs.terrarium.world.gen.BiomeProvider;
 
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static xyz.lynxs.terrarium.Terrarium.CONFIG;
-import static xyz.lynxs.terrarium.Util.truncate;
 import static xyz.lynxs.terrarium.world.gen.BiomeProvider.getClimate;
+import static xyz.lynxs.terrarium.world.gen.HeightProvider.getElevation;
 
 
 public class TerrariumBiomeSource extends BiomeSource {
-    private final List<BiomeEntry> biomeEntries;
-    private final PerlinNoiseSampler noiseSampler;
-    private final RegistryEntry<ChunkGeneratorSettings> settings;
-    private final Double noiseScales;
 
 
-    public static final Codec<TerrariumBiomeSource> CODEC = RecordCodecBuilder.create(instance ->
-            instance.group(
-                    BiomeEntry.CODEC.listOf().fieldOf("biomes").forGetter(source -> source.biomeEntries),
-                    ChunkGeneratorSettings.REGISTRY_CODEC.fieldOf("settings").forGetter(source -> source.settings),
-                    Codec.DOUBLE.fieldOf("noise_scale").forGetter(source -> source.noiseScales)
-            ).apply(instance, TerrariumBiomeSource::new)
-    );
+    private static final MapCodec<RegistryEntry<Biome>> BIOME_CODEC;
+    /**
+     * Used to parse a custom biome source, when a preset hasn't been provided.
+     */
+    public static final MapCodec<MultiNoiseUtil.Entries<RegistryEntry<Biome>>> CUSTOM_CODEC;
+    private static final MapCodec<RegistryEntry<MultiNoiseBiomeSourceParameterList>> PRESET_CODEC;
+    public static final Codec<TerrariumBiomeSource> CODEC;
+    private final Either<MultiNoiseUtil.Entries<RegistryEntry<Biome>>, RegistryEntry<MultiNoiseBiomeSourceParameterList>> biomeEntries;
+    public static PerlinNoiseSampler sampler;
+    public TerrariumBiomeSource(Either<MultiNoiseUtil.Entries<RegistryEntry<Biome>>, RegistryEntry<MultiNoiseBiomeSourceParameterList>> biomeRegistry) {
+        this.biomeEntries = biomeRegistry;
 
-    public TerrariumBiomeSource(List<BiomeEntry> biomeEntries, RegistryEntry<ChunkGeneratorSettings> settings, Double noiseScales ) {
-        this(biomeEntries, Random.create(), settings, noiseScales);
+    }
+    private MultiNoiseUtil.Entries<RegistryEntry<Biome>> getBiomeRegistry() {
+        return this.biomeEntries.map((entries) -> {
+            return entries;
+        }, (parameterListEntry) -> {
+            return parameterListEntry.value().getEntries();
+        });
     }
 
-    public TerrariumBiomeSource(List<BiomeEntry> biomeEntries, Random random, RegistryEntry<ChunkGeneratorSettings> settings, Double noiseScales) {
-        this.biomeEntries = biomeEntries;
-        this.noiseSampler = new PerlinNoiseSampler(random);
-        this.settings = settings;
-        this.noiseScales = noiseScales;
-    }
 
-
-    public record BiomeEntry(
-            RegistryEntry<Biome> biome,
-            double precipitation,
-            double temperature,
-            double noiseWeight
-    ) {
-        public static final Codec<BiomeEntry> CODEC = RecordCodecBuilder.create(instance ->
-                instance.group(
-                        Biome.REGISTRY_CODEC.fieldOf("biome").forGetter(BiomeEntry::biome),
-                        Codec.DOUBLE.fieldOf("precipitation").forGetter(BiomeEntry::precipitation) ,
-                        Codec.DOUBLE.fieldOf("temperature").forGetter(BiomeEntry::temperature),
-                        Codec.DOUBLE.fieldOf("noise_weight").forGetter(BiomeEntry::noiseWeight)
-                ).apply(instance, BiomeEntry::new)
-        );
-    }
 
     @Override
     protected Codec<? extends BiomeSource> getCodec() {
-        return CODEC;
+        return MultiNoiseBiomeSource.CODEC;
     }
 
     @Override
     protected Stream<RegistryEntry<Biome>> biomeStream() {
-        return biomeEntries.stream().map(BiomeEntry::biome);
+        return this.getBiomeRegistry().getEntries().stream().map(Pair::getSecond);
     }
 
 
     @Override
-    public RegistryEntry<Biome> getBiome(int x, int elevation, int z, MultiNoiseUtil.MultiNoiseSampler noise) {
+    public RegistryEntry<Biome> getBiome(int x, int y, int z, MultiNoiseUtil.MultiNoiseSampler noise) {
         int adjustedX = x + CONFIG.adjustXoffset;
         int adjustedZ = z + CONFIG.adjustZoffset;
-        double precipitation = (adjustedX > 0 && adjustedZ > 0) && (adjustedX < HeightProvider.size && adjustedZ < HeightProvider.size) ? getClimate(adjustedX, adjustedZ, true) : 2;
-        double temperature = (adjustedX > 0 && adjustedZ > 0) && (adjustedX < HeightProvider.size && adjustedZ < HeightProvider.size) ?  getClimate(adjustedX, adjustedZ, false) : 2;
+        int elevation = getElevation(adjustedX, adjustedZ) + CONFIG.startingY;
+        // Get climate and biome tag safely
+        int climate = BiomeProvider.getClimate(adjustedX, adjustedZ);
+        TagKey<Biome> biomeTag = BiomeColorRegistry.getTagForColor(climate); // Fallback to plains if not found
+        RegistryEntryList<Biome> biomes = elevation > 64 ? BiomeColorRegistry.getBiomesForTag(biomeTag) : BiomeColorRegistry.getBiomesForTag(BiomeTags.IS_OCEAN);
 
-        precipitation =  precipitation > 1 ? noise.sample(x, elevation, z).humidityNoise() : precipitation;
-        temperature =  temperature > 1 ? noise.sample(x, elevation, z).temperatureNoise() : temperature;
+        double noiseVal = Math.abs(sampler.sample(((double) x / biomes.size()) * CONFIG.noise_biome_scale, y * 0.1 , ((double) z / biomes.size()) * CONFIG.noise_biome_scale));
 
-        return findBestBiome(precipitation, temperature, getNoiseValue(adjustedX, elevation, adjustedZ));
+        return biomes.get((int) ((noiseVal) * biomes.size()));
     }
-
-
-    private double getNoiseValue(int x, int elevation, int z) {
-        return noiseSampler.sample(x * CONFIG.noise_biome_scale, elevation * CONFIG.noise_biome_scale, z * CONFIG.noise_biome_scale);
-    }
-
-    private RegistryEntry<Biome> findBestBiome(double precip, double temperature, double noise) {
-        if (biomeEntries.isEmpty()) {
-            throw new IllegalStateException("No biomes available!");
-        }
-
-        return biomeEntries.stream()
-                .min(Comparator.comparingDouble(b -> {
-                    // Calculate squared Euclidean distance
-                    double precipDiff = Math.pow(precip - b.precipitation(), 2) * 0.5;
-                    double tempDiff = Math.pow(temperature - b.temperature(), 2) ;
-                    double noiseDiff = Math.pow(noise - b.noiseWeight(), 2);
-                    return Math.sqrt(precipDiff + tempDiff + noiseDiff);
-                }))
-                .orElseThrow() // Should not throw if biomeEntries is not empty
-                .biome();
-    }
-
 
 
 
     @Override
     public void addDebugInfo(List<String> info, BlockPos pos, MultiNoiseUtil.MultiNoiseSampler noiseSampler) {
         int i = BiomeCoords.fromBlock(pos.getX());
-        int j = BiomeCoords.fromBlock(pos.getY());
         int k = BiomeCoords.fromBlock(pos.getZ());
         int adjustedZ = k + CONFIG.adjustZoffset;
         int adjustedX = i + CONFIG.adjustXoffset;
-
+        int climate = getClimate(adjustedX, adjustedZ);
         info.add(
                 "Biome builder PV: "
-                        + " Precipitation: "
-                        + truncate((adjustedX > 0 && adjustedZ > 0) && (adjustedX < HeightProvider.size && adjustedZ < HeightProvider.size) ? getClimate(adjustedX, adjustedZ, true) : -1.000, 3)
-                        + " Temperature: "
-                        + truncate((adjustedX > 0 && adjustedZ > 0) && (adjustedX < HeightProvider.size && adjustedZ < HeightProvider.size) ? getClimate(adjustedX, adjustedZ, false) : -1.000, 3)
-                        + " Noise: "
-                        + truncate(getNoiseValue(i, j, k), 3)
+                        + "Biome: " + BiomeColorRegistry.getMappingForTag(BiomeColorRegistry.getTagForColor(climate)).comment().orElse("error")
+
         );
+    }
+    static {
+
+        BIOME_CODEC = Biome.REGISTRY_CODEC.fieldOf("biome");
+        CUSTOM_CODEC = MultiNoiseUtil.Entries.createCodec(BIOME_CODEC).fieldOf("biomes");
+        PRESET_CODEC = MultiNoiseBiomeSourceParameterList.REGISTRY_CODEC.fieldOf("preset").withLifecycle(Lifecycle.stable());
+        CODEC = Codec.mapEither(CUSTOM_CODEC, PRESET_CODEC).xmap(TerrariumBiomeSource::new, source -> source.biomeEntries).codec();
     }
 
 }

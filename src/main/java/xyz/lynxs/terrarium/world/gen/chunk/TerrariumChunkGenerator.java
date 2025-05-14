@@ -2,7 +2,9 @@ package xyz.lynxs.terrarium.world.gen.chunk;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.mojang.serialization.Codec;
+import net.minecraft.world.gen.GenerationStep;
 import xyz.lynxs.terrarium.accessor.TerrariumSurfaceBuilderAccessor;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.BlockState;
@@ -26,9 +28,7 @@ import net.minecraft.world.biome.GenerationSettings;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeCoords;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ProtoChunk;
-import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.HeightContext;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.StructureWeightSampler;
@@ -37,6 +37,7 @@ import net.minecraft.world.gen.carver.CarvingMask;
 import net.minecraft.world.gen.carver.ConfiguredCarver;
 import net.minecraft.world.gen.chunk.*;
 import net.minecraft.world.gen.noise.NoiseConfig;
+import xyz.lynxs.terrarium.world.gen.HeightProvider;
 import xyz.lynxs.terrarium.world.gen.biome.TerrariumBiomeSource;
 
 import java.util.Arrays;
@@ -72,8 +73,6 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         int adjustedX = x + CONFIG.adjustXoffset;
         int adjustedZ = z + CONFIG.adjustZoffset;
 
-        if (adjustedX < 0 || adjustedZ < 0 || adjustedX > size || adjustedZ > size)
-            return getMinimumY() - 1;
 
         return getElevation(adjustedX, adjustedZ) + CONFIG.startingY;
     }
@@ -104,10 +103,9 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         return CODEC;
     }
 
-    @Override
-    @SuppressWarnings("deprecation")
-    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk2, GenerationStep.Carver carverStep) {
 
+    @Override
+    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk2, GenerationStep.Carver carverStep) {
         BiomeAccess biomeAccess2 = biomeAccess.withSource((biomeX, biomeY, biomeZ) -> this.biomeSource.getBiome(biomeX, biomeY, biomeZ, noiseConfig.getMultiNoiseSampler()));
         ChunkRandom chunkRandom = new ChunkRandom(new CheckedRandom(RandomSeed.getSeed()));
         int i = 8;
@@ -137,6 +135,8 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
             }
         }
     }
+
+
 
     @Override
     public void buildSurface(ChunkRegion region, StructureAccessor structures, NoiseConfig noiseConfig, Chunk chunk) {
@@ -168,6 +168,7 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         return this.settings.value().generationShapeConfig().height();
     }
 
+
     @Override
     public CompletableFuture<Chunk> populateNoise(Executor executor, Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
         GenerationShapeConfig generationShapeConfig = this.settings.value().generationShapeConfig().trimHeight(chunk.getHeightLimitView());
@@ -178,101 +179,45 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         int x = (chunk.getPos().x << 4) + CONFIG.adjustXoffset;
         int z = (chunk.getPos().z << 4) + CONFIG.adjustZoffset;
 
-
-        int minimumCellY = MathHelper.floorDiv(generationShapeConfig.minimumY(), generationShapeConfig.verticalCellBlockCount());
-        int cellHeight = MathHelper.floorDiv(generationShapeConfig.height(), generationShapeConfig.verticalCellBlockCount());
         if (x < -16 || z < -16) return CompletableFuture.completedFuture(chunk);
-        return CompletableFuture.supplyAsync(Util.debugSupplier("wgen_fill_noise", () -> this.populateNoise(chunk, structureAccessor, blender, noiseConfig, minimumCellY, cellHeight)), Util.getMainWorkerExecutor());
+        return CompletableFuture.supplyAsync(Util.debugSupplier(() -> this.populateNoise(chunk), () -> "terrarium_cgen"), Util.getMainWorkerExecutor());
     }
 
-    private Chunk populateNoise(Chunk chunk, StructureAccessor accessor, Blender blender, NoiseConfig noiseConfig, int minimumCellY, int cellHeight) {
-        ChunkNoiseSampler chunkNoiseSampler = chunk.getOrCreateChunkNoiseSampler(chunk1 -> this.createChunkNoiseSampler(chunk, accessor, blender, noiseConfig));
+
+    private Chunk populateNoise(Chunk chunk) {
         Heightmap oceanHeightmap = chunk.getHeightmap(Heightmap.Type.OCEAN_FLOOR_WG);
         Heightmap surfaceHeightmap = chunk.getHeightmap(Heightmap.Type.WORLD_SURFACE_WG);
         ChunkPos chunkPos = chunk.getPos();
         int i = chunkPos.getStartX();
         int j = chunkPos.getStartZ();
-        chunkNoiseSampler.sampleStartDensity();
         BlockPos.Mutable mutable = new BlockPos.Mutable();
-        int k = chunkNoiseSampler.getHorizontalCellBlockCount();
-        int l = chunkNoiseSampler.getVerticalCellBlockCount();
-        int m = 16 / k;
-        int n = 16 / k;
-
-
         BlockState defaultFluid = this.settings.value().defaultFluid();
-        for (int o = 0; o < m; ++o) {
-            chunkNoiseSampler.sampleEndDensity(o);
-            for (int p = 0; p < n; ++p) {
-                int q1 = chunk.countVerticalSections() - 1;
-                ChunkSection chunkSection = chunk.getSection(q1);
-                for (int q = cellHeight - 1; q >= 0; --q) {
-                    chunkNoiseSampler.onSampledCellCorners(q, p);
-                    for (int r = l - 1; r >= 0; --r) {
-                        int s = (minimumCellY + q) * l + r;
-                        int t = s & 0xF;
-                        int u = chunk.getSectionIndex(s);
-                        if (q1 != u) {
-                            q1 = u;
-                            chunkSection = chunk.getSection(u);
+
+        for (int ii = 0; ii < 16; ii++) {
+            for(int jj = 0; jj < 16; jj++){
+                int seaLevel = getSeaLevel(i + ii, j + jj);
+                int elevation = getFromMap(i + ii, j + jj);
+                for(int yy = this.settings.value().generationShapeConfig().minimumY(); yy < this.settings.value().generationShapeConfig().height(); yy++){
+                    mutable.set(i + ii, yy, j + jj);
+
+                    BlockState state;
+
+                        if (yy <= seaLevel && yy >= elevation) {
+                            state = defaultFluid;
+                        } else if (yy < elevation) {
+                            state = this.settings.value().defaultBlock(); //getBlock(blockX, blockZ, blockY);
+                        } else {
+                            state = AIR;
                         }
-                        double d = (double) r / (double) l;
-                        chunkNoiseSampler.interpolateY(s, d);
-                        for (int v = 0; v < k; ++v) {
-                            int w = i + o * k + v;
-                            int x = w & 0xF;
-                            double e = (double) v / (double) k;
-                            chunkNoiseSampler.interpolateX(w, e);
-                            for (int y = 0; y < k; ++y) {
 
-                                int z = j + p * k + y;
-                                int aa = z & 0xF;
-                                double f = (double) y / (double) k;
-                                chunkNoiseSampler.interpolateZ(z, f);
-                                int blockX = chunkNoiseSampler.blockX();
-                                int blockY = chunkNoiseSampler.blockY();
-                                int blockZ = chunkNoiseSampler.blockZ();
-
-                                mutable.set(blockX, blockY, blockZ);
-                                int seaLevel = this.getSeaLevel(blockX, blockZ);
-                                int elevation = getFromMap(blockX, blockZ);
-
-                                BlockState state;
-                                if (elevation - blockY <= 10) {
-                                    if (blockY <= seaLevel && blockY >= elevation) {
-                                        state = defaultFluid;
-                                    } else if (blockY < elevation) {
-                                        state = this.settings.value().defaultBlock(); //getBlock(blockX, blockZ, blockY);
-                                    } else {
-                                        state = AIR;
-                                    }
-                                    chunk.setBlockState(mutable, state, false);
-                                    surfaceHeightmap.trackUpdate(blockX & 0xF, blockY, blockZ & 0xF, state);
-                                    oceanHeightmap.trackUpdate(blockX & 0xF, blockY, blockZ & 0xF, state);
-                                } else {
-                                    state = chunkNoiseSampler.sampleBlockState();
-
-                                    state = this.settings.value().defaultBlock();
-
-                                    if ((SharedConstants.isOutsideGenerationArea(chunk.getPos())))
-                                        continue;
-                                    chunkSection.setBlockState(x, t, aa, state, false);
-                                    oceanHeightmap.trackUpdate(x, s, aa, state);
-                                    surfaceHeightmap.trackUpdate(x, s, aa, state);
-                                }
-                                mutable.set(w, s,z);
-                                //if (!aquiferSampler.needsFluidTick() || state.getFluidState().isEmpty()) continue;
-                                chunk.markBlockForPostProcessing(mutable);
-                                //buildSurface(chunk, new HeightContext(this, chunk.getHeightLimitView()),noiseConfig, accessor, null, accessor.getRegistryManager().get(), blender);
-                            }
-                        }
-                    }
+                        chunk.setBlockState(mutable, state, false);
+                        surfaceHeightmap.trackUpdate((i + ii) & 0xF, yy, (j + jj) & 0xF, state);
+                        oceanHeightmap.trackUpdate((i + ii) & 0xF, yy, (j + jj) & 0xF, state);
+                        mutable.set((i + ii), yy, (j + jj));
+                        chunk.markBlockForPostProcessing(mutable);
                 }
             }
-            chunkNoiseSampler.swapBuffers();
         }
-        chunkNoiseSampler.stopInterpolation();
-
         return chunk;
     }
 
@@ -282,7 +227,12 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
     }
 
     public int getSeaLevel(int x, int z) {
-        return this.settings.value().seaLevel();
+        int adjustedX = x + CONFIG.adjustXoffset;
+        int adjustedZ = z + CONFIG.adjustZoffset;
+
+
+
+        return HeightProvider.getWaterElevation(adjustedX, adjustedZ);
     }
 
     @Override
@@ -322,13 +272,19 @@ public class TerrariumChunkGenerator extends ChunkGenerator {
         );
     }
 
+
     @Override
     public void getDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
         text.add(
-                "[Terrarium] Elevation: " + getFromMap(pos.getX(), pos.getZ()) +
-                        ", Cords: " + Arrays.toString(gridToLatLon(pos.getX() + CONFIG.adjustXoffset, pos.getZ() + CONFIG.adjustZoffset, size))
+                "[Terrarium] Elevation: " + getFromMap(pos.getX(), pos.getZ())
+        );
+        text.add(
+                "[Terrarium] [Lat, Lon]: " + Arrays.toString(gridToLatLon(pos.getX() + CONFIG.adjustXoffset, pos.getZ() + CONFIG.adjustZoffset, size))
         );
     }
+
+
+
 
     private ChunkNoiseSampler createChunkNoiseSampler(Chunk chunk, StructureAccessor world, Blender blender, NoiseConfig noiseConfig) {
         return ChunkNoiseSampler.create(

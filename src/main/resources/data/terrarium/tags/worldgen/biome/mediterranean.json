@@ -1,0 +1,17 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:taiga",
+    "minecraft:desert",
+    "minecraft:wooded_badlands",
+    "minecraft:windswept_savanna",
+
+    {"id":"terralith:shrubland", "required": false},
+    {"id":"terralith:brushland", "required": false},
+    {"id":"terralith:white_cliffs", "required": false},
+
+    {"id":"regions_unexplored:chalk_cliffs", "required": false},
+    {"id":"regions_unexplored:joshua_desert", "required": false},
+    {"id":"regions_unexplored:shrubland", "required": false}
+  ]
+}

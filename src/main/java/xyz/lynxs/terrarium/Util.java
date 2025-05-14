@@ -3,7 +3,50 @@ package xyz.lynxs.terrarium;
 
 public class Util {
     private static final double EARTH_RADIUS = 6378137.0; // Standard Mercator Earth radius (meters)
-    private static final double MAX_MERCATOR = EARTH_RADIUS * Math.PI; // ~20,037,508 meters
+    private static final double MAX_MERCATOR = EARTH_RADIUS * Math.PI;
+    private static final double MAX_LAT = 85.05112878; // Web Mercator maximum latitude
+
+    /**
+     * Converts latitude to grid Z coordinate (Web Mercator)
+     * @param latitude - Latitude in degrees (-85.051129 to 85.051129)
+     * @param maxSize - Grid height (e.g., 256, 512)
+     * @return Z coordinate (0 to maxSize-1)
+     */
+    public static int latToZ(double latitude, int maxSize) {
+        // Clamp latitude to valid Web Mercator range
+        latitude = Math.max(-MAX_LAT, Math.min(MAX_LAT, latitude));
+
+        // Convert to radians
+        double latRad = Math.toRadians(latitude);
+
+        // Web Mercator projection formula
+        double mercatorY = Math.log(Math.tan(Math.PI/4 + latRad/2));
+
+        // Normalize to [0,1] range and flip Y to Z (top-to-bottom)
+        double normalized = (1.0 - (mercatorY / Math.PI)) / 2.0;
+
+        // Convert to grid coordinate with proper rounding
+        int z = (int) Math.floor(normalized * maxSize);
+
+        // Clamp to valid range
+        return Math.max(0, Math.min(maxSize - 1, z));
+    }
+    /**
+     * Converts longitude to grid X coordinate (Web Mercator)
+     * @param longitude - Longitude in degrees (-180 to 180)
+     * @param maxSize - Grid width (e.g., 256, 512)
+     * @return X coordinate (0 to maxSize-1)
+     */
+    public static int lonToX(double longitude, int maxSize) {
+        // Normalize longitude to [0,1] range
+        double normalized = (longitude + 180.0) / 360.0;
+
+        // Convert to grid coordinate with proper rounding
+        int x = (int) Math.floor(normalized * maxSize);
+
+        // Clamp to valid range
+        return Math.max(0, Math.min(maxSize - 1, x));
+    }
     /**
      * Convert integer X/Z in a variable-sized grid to latitude/longitude.
      * @param x X coordinate (integer, 0 to maxSize-1)
@@ -23,6 +66,8 @@ public class Util {
 
         return new double[]{lon, lat};
     }
+
+
     public static double truncate(double num, int places){
         return  (int)(num * Math.pow(10, places)) / Math.pow(10, places); // truncatedNumber will be 10.78
     }

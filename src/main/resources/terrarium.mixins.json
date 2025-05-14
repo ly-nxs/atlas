@@ -4,6 +4,7 @@
   "package": "xyz.lynxs.terrarium.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ChunkNoiseSamplerAccessor",
     "MaterialRuleContextAccessor",
     "RegistryElementCodecAccessor",
     "SurfaceBuilderMixin",

@@ -1,0 +1,22 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:jungle",
+    "minecraft:sparse_jungle",
+    "minecraft:bamboo_jungle",
+    "minecraft:dark_forest",
+    "minecraft:mangrove_swamp",
+
+    {"id":"terralith:jungle_mountains","required": false},
+    {"id":"terralith:rocky_jungle","required": false},
+    {"id":"terralith:tropical_jungle","required": false},
+
+    {"id":"regions_unexplored:bamboo_forest","required": false},
+    {"id":"regions_unexplored:bayou","required": false},
+    {"id":"regions_unexplored:eucalyptus_forest","required": false},
+    {"id":"regions_unexplored:old_growth_bayou","required": false},
+    {"id":"regions_unexplored:rainforest","required": false},
+    {"id":"regions_unexplored:sparse_rainforest","required": false},
+    {"id":"regions_unexplored:tropics","required": false}
+  ]
+}

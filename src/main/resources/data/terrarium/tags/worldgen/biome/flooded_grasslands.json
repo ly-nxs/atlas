@@ -1,0 +1,15 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:mangrove_swamp",
+    "minecraft:savanna_plateau",
+    "minecraft:swamp",
+    "minecraft:plains",
+
+    {"id":"terralith:orchid_swamp", "required": false},
+
+    {"id":"regions_unexplored:bayou", "required": false},
+    {"id":"regions_unexplored:marsh", "required": false},
+    {"id":"regions_unexplored:old_growth_bayou", "required": false}
+  ]
+}

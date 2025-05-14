@@ -1,0 +1,26 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:forest",
+    "minecraft:birch_forest",
+    "minecraft:old_growth_birch_forest",
+    "minecraft:flower_forest",
+    "minecraft:dark_forest",
+    "minecraft:cherry_grove",
+    "minecraft:plains",
+
+    {"id":"terralith:birch_taiga", "required": false},
+    {"id":"terralith:cloud_forest", "required": false},
+    {"id":"terralith:lavender_forest", "required": false},
+    {"id":"terralith:valley_clearing", "required": false},
+
+    {"id":"regions_unexplored:barley_fields", "required": false},
+    {"id":"regions_unexplored:autumnal_maple_forest", "required": false},
+    {"id":"regions_unexplored:deciduous_forest", "required": false},
+    {"id":"regions_unexplored:magnolia_woodland", "required": false},
+    {"id":"regions_unexplored:mauve_hills", "required": false},
+    {"id":"regions_unexplored:orchard", "required": false},
+    {"id":"regions_unexplored:silver_birch_forest", "required": false},
+    {"id":"regions_unexplored:temperate_grove", "required": false}
+  ]
+}

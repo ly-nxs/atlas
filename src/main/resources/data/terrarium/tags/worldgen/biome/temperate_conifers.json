@@ -1,0 +1,28 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:taiga",
+    "minecraft:meadow",
+    "minecraft:windswept_forest",
+    "minecraft:old_growth_pine_taiga",
+    "minecraft:old_growth_spruce_taiga",
+
+    {"id":"terralith:yosemite_lowland", "required": false},
+    {"id":"terralith:shield_clearing", "required": false},
+    {"id":"terralith:birch_taiga", "required": false},
+    {"id":"terralith:alpine_highlands", "required": false},
+    {"id":"terralith:lush_valley", "required": false},
+
+    {"id":"regions_unexplored:boreal_taiga", "required": false},
+    {"id":"regions_unexplored:fen", "required": false},
+    {"id":"regions_unexplored:golden_boreal_taiga", "required": false},
+    {"id":"regions_unexplored:maple_forest", "required": false},
+    {"id":"regions_unexplored:mountains", "required": false},
+    {"id":"regions_unexplored:pine_slopes", "required": false},
+    {"id":"regions_unexplored:pine_taiga", "required": false},
+    {"id":"regions_unexplored:pumpkin_fields", "required": false},
+    {"id":"regions_unexplored:redwoods", "required": false},
+    {"id":"regions_unexplored:sparse_redwoods", "required": false},
+    {"id":"regions_unexplored:willow_forest", "required": false}
+  ]
+}

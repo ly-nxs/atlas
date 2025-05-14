@@ -1,0 +1,65 @@
+{
+  "mappings": [
+    {
+      "tag": "terrarium:tundra",
+      "color": "#5CA7D3",
+      "comment": "Tundra"
+    },
+    {
+      "tag": "terrarium:taiga",
+      "color": "#B1D86E",
+      "comment": "Boreal Forests/Taiga"
+    },
+    {
+      "tag": "terrarium:temperate_broadleaf_mixed",
+      "color": "#00C100",
+      "comment": "Temperate Broadleaf & Mixed Forests"
+    },
+    {
+      "tag": "terrarium:temperate_conifers",
+      "color": "#1A843A",
+      "comment": "Temperate Conifer Forests"
+    },
+    {
+      "tag": "terrarium:temperate_grasslands",
+      "color": "#88E337",
+      "comment": "Temperate Grasslands, Savannas & Shrublands"
+    },
+    {
+      "tag": "terrarium:deserts_shrubs",
+      "color": "#E0CB6B",
+      "comment": "Deserts & Xeric Shrubs"
+    },
+    {
+      "tag": "terrarium:mediterranean",
+      "color": "#DC5859",
+      "comment": "Mediterranean Forests, Woodlands & Scrub"
+    },
+    {
+      "tag": "terrarium:flooded_grasslands",
+      "color": "#6159B4",
+      "comment": "Flooded Grasslands & Savannas"
+    },
+    {
+      "tag": "terrarium:tropical_grasslands",
+      "color": "#B3882F",
+      "comment": "Tropical & Subtropical Grasslands, Savannas & Shrublands"
+    },
+    {
+      "tag": "terrarium:tropical_coniferous_forests",
+      "color": "#768624",
+      "comment": "Tropical & Subtropical Coniferous Forests"
+    },
+    {
+      "tag": "terrarium:tropical_dry_broadleaf_forests",
+      "color": "#B1C05E",
+      "comment": "Tropical & Subtropical Dry Broadleaf Forests"
+    },
+    {
+      "tag": "terrarium:tropical_moist_broadleaf_forests",
+      "color": "#013500",
+      "comment": "Tropical & Subtropical Moist Broadleaf Forests"
+    }
+  ],
+  "default_biome": "minecraft:plains"
+}
