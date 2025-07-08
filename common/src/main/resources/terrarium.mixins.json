@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "xyz.lynxs.terrarium.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "client": [
+    "LevelSelectorMixin"
+  ],
+  "mixins": [
+    "ClimateSamplerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
