@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "terrarium",
+  "version": "${version}",
+  "name": "terrarium",
+  "description": "",
+  "authors": [
+    ""
+  ],
+  "contact": {
+    "homepage": ""
+  },
+  "license": "MIT",
+  "icon": "assets/terrarium/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "xyz.lynxs.terrarium.fabric.TerrariumFabric"
+    ],
+    "client": [
+      "xyz.lynxs.terrarium.fabric.client.TerrariumFabricClient"
+    ]
+  },
+  "mixins": [
+    "terrarium.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "architectury": ">=13.0.8",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
