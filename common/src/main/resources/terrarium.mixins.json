@@ -6,9 +6,7 @@
   "client": [
     "LevelSelectorMixin"
   ],
-  "mixins": [
-    "ClimateSamplerMixin"
-  ],
+  "mixins": [],
   "injectors": {
     "defaultRequire": 1
   }

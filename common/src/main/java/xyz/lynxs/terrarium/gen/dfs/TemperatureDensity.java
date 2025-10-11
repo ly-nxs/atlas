@@ -11,17 +11,17 @@ import static xyz.lynxs.terrarium.gen.BiomeProvider.getTemperature;
 /**
  * Populates Temperature values
  */
-public record TemperatureDensity(NoiseHolder noise) implements DensityFunction.SimpleFunction {
+public record TemperatureDensity(DensityFunction noise) implements DensityFunction.SimpleFunction {
     public static final KeyDispatchDataCodec<TemperatureDensity> CODEC = KeyDispatchDataCodec.of(
             RecordCodecBuilder.mapCodec(instance -> instance.group(
-                            NoiseHolder.CODEC.fieldOf("noise").forGetter(TemperatureDensity::noise)
+                            DensityFunction.DIRECT_CODEC.fieldOf("noise").forGetter(TemperatureDensity::noise)
             ).apply(instance, TemperatureDensity::new)));
     @Override
     public double compute(FunctionContext pos) {
         /*
         Simple region based TODO: Add noise
         */
-        return (getTemperature(pos.blockX(), pos.blockZ()) + noise.getValue(pos.blockX(), pos.blockY(), pos.blockZ()) / 4.0) - ((double) pos.blockY() / CONFIG.worldHeight) / 2.0;
+        return getTemperature(pos.blockX(), pos.blockZ()) + noise.compute(pos) / 5.0;
     }
 
     @Override
@@ -41,7 +41,7 @@ public record TemperatureDensity(NoiseHolder noise) implements DensityFunction.S
     @Override
     public @NotNull DensityFunction mapAll(Visitor visitor) {
         return visitor.apply(new TemperatureDensity(
-                noise
+                noise.mapAll(visitor)
         ));
     }
 

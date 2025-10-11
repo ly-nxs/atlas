@@ -6,7 +6,7 @@ import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import org.jetbrains.annotations.NotNull;
 
-import static xyz.lynxs.terrarium.gen.HeightProvider.getElevation;
+import static xyz.lynxs.terrarium.Terrarium.CONFIG;
 
 /**
  * Populates depth values
@@ -19,29 +19,19 @@ public record DepthDensity(int depth) implements DensityFunction.SimpleFunction 
     @Override
     public double compute(FunctionContext pos) {
         /*
-        min 0.0: Land biomes
-        0.2-0.9: Caves
-        1.0: Land biomes
-        max 1.1: Deep Dark
+            simple height based
         */
-        short height = getElevation(pos.blockX(), pos.blockZ());
-        if(pos.blockY() < height - depth){
-            if(pos.blockY() < 0){
-                return 1.1;
-            }
-            return 0.5;
-        }
-        return 0.0;
+        return Math.clamp((double) (pos.blockY() - 64) / (CONFIG.worldHeight - 64), -1.0, 1.0);
     }
 
     @Override
     public double minValue() {
-        return 0;
+        return -1.0;
     }
 
     @Override
     public double maxValue() {
-        return 1.1;
+        return 1.0;
     }
 
     @Override

@@ -3,7 +3,7 @@ package xyz.lynxs.terrarium;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
+import dev.architectury.platform.Platform;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -26,7 +26,7 @@ public class TerrariumConfig {
             .create();
 
     private static File getFile(Path filename, boolean type) {
-        return type ? FabricLoader.getInstance().getConfigDir().resolve(filename).toFile() : filename.toFile();
+        return type ? Platform.getConfigFolder().resolve(filename).toFile() : filename.toFile();
     }
 
     public static <T> @NotNull T load(Class<T> clazz, Path filename, boolean type) {

@@ -2,17 +2,18 @@ package xyz.lynxs.terrarium.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractScrollWidget;
+import net.minecraft.client.gui.components.AbstractScrollArea;
 
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class TerrariumScrollableWidget extends AbstractScrollWidget {
+public abstract class TerrariumScrollableWidget extends AbstractScrollArea{
     private double scrollAmount;
     private boolean scrolling;
     private final int contentHeight;
@@ -38,8 +39,8 @@ public abstract class TerrariumScrollableWidget extends AbstractScrollWidget {
         context.enableScissor(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height);
 
         // Apply scroll translation
-        context.pose().pushPose();
-        context.pose().translate(0.0, -this.scrollAmount, 0.0);
+        context.pose().pushMatrix();
+        context.pose().translate(0.0F, (float) -this.scrollAmount, new Matrix3x2f());
 
         // Render background
         this.renderBackground(context, mouseX, mouseY, delta);
@@ -48,7 +49,7 @@ public abstract class TerrariumScrollableWidget extends AbstractScrollWidget {
         this.renderContents(context, mouseX, mouseY, delta);
 
         // Restore matrix state
-        context.pose().popPose();
+        context.pose().popMatrix();
         context.disableScissor();
 
         // Render scroll bar
@@ -63,14 +64,14 @@ public abstract class TerrariumScrollableWidget extends AbstractScrollWidget {
 
     protected void renderContents(GuiGraphics context, int mouseX, int mouseY, float delta) {
         // Render child widgets
-        context.pose().pushPose();
-        context.pose().translate(0, -this.scrollAmount, 0);
+        context.pose().pushMatrix();
+        context.pose().translate( 0.0F, (float) -this.scrollAmount, new Matrix3x2f());
 
         for (AbstractWidget widget : childWidgets) {
             widget.render(context, mouseX, (int) (mouseY + this.getScrollAmount()), delta);
         }
 
-        context.pose().popPose();
+        context.pose().popMatrix();
     }
 
     protected void renderScrollBar(GuiGraphics context) {

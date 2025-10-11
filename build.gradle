@@ -6,6 +6,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.4'
 }
 
+
 architectury {
     minecraft = project.minecraft_version
 }
@@ -21,19 +22,12 @@ subprojects {
     apply plugin: 'maven-publish'
 
     base {
-        // Set up a suffixed format for the mod jar names, e.g. `example-fabric`.
         archivesName = "$rootProject.archives_name-$project.name"
     }
 
     repositories {
-        // Add repositories to retrieve artifacts from in here.
-        // You should only use this when depending on other mods because
-        // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-        // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-        // for more information about repositories.
         mavenCentral()
     }
-
 
     dependencies {
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
@@ -41,11 +35,7 @@ subprojects {
     }
 
     java {
-        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-        // if it is present.
-        // If you remove this line, sources will not be generated.
         withSourcesJar()
-
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -54,7 +44,6 @@ subprojects {
         it.options.release = 21
     }
 
-    // Configure Maven publishing.
     publishing {
         publications {
             mavenJava(MavenPublication) {
@@ -62,15 +51,28 @@ subprojects {
                 from components.java
             }
         }
-
-        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
         repositories {
-            // Add repositories to publish to here.
-            // Notice: This block does NOT have the same function as the block in the top level.
-            // The repositories here will be used for publishing your artifact, not for
-            // retrieving dependencies.
+            // Your publishing repositories
         }
     }
-    // For building a fat JAR that includes all dependencies
 }
 
+// Add this at the bottom of the file
+tasks.register('buildAll') {
+    dependsOn ':fabric:build'
+    dependsOn ':neoforge:build'
+    group = 'build'
+    description = 'Builds both Fabric and NeoForge versions'
+}
+
+// Optional: Add a task to collect all built jars into a directory
+tasks.register('collectJars', Copy) {
+    dependsOn buildAll
+    from layout.buildDirectory.dir('libs')
+    into layout.buildDirectory.dir('distributions')
+    include '**/*.jar'
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Make buildAll also collect the jars
+buildAll.finalizedBy collectJars

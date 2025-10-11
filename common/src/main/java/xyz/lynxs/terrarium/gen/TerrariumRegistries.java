@@ -2,6 +2,7 @@ package xyz.lynxs.terrarium.gen;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+
 import xyz.lynxs.terrarium.Terrarium;
 import xyz.lynxs.terrarium.gen.dfs.*;
 
@@ -16,3 +17,4 @@ public class TerrariumRegistries {
         Registry.register(BuiltInRegistries.DENSITY_FUNCTION_TYPE,Terrarium.id("continentalness"), ContinentalnessDensity.CODEC.codec());
     }
 }
+

@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 import static xyz.lynxs.terrarium.Terrarium.CONFIG;
 import static xyz.lynxs.terrarium.Terrarium.CONFIG1;
@@ -29,11 +29,65 @@ public class HeightProvider {
     public static int size = (int) (256 * Math.pow(2, CONFIG.zoom));
 
 
+    // Define a simple record (Java 16+) or class to hold all tile data
+    public record TileData(
+            short[][] elevation,
+            float[][] steepness,
+            short maxElevation
+    ) {
+        // Dummy data for error case
+        public static final TileData DUMMY = new TileData(new short[256][256], new float[256][256], (short) 0);
+    }
 
-    private static final Map<Long, short[][]> elevMap = new ConcurrentHashMap<>();
-    private static final Map<Long, float[][]> steepMap = new ConcurrentHashMap<>();
-    private static final Map<Long, short[][]> waterMap = new ConcurrentHashMap<>();
-    private static final Map<Long, short[]> minMaxMap = new ConcurrentHashMap<>();
+    // Dedicated thread pool for heavy I/O/Computation tasks
+    private static final ExecutorService IO_EXECUTOR = Executors.newFixedThreadPool(4);
+
+    // Cache map changed to hold Future<TileData> to indicate work in progress
+    private static final Map<Long, Future<TileData>> tileFutures = new ConcurrentHashMap<>();
+
+    private static TileData loadAndComputeTile(int xTile, int zTile) {
+        // 1. I/O: Load the image (disk or network)
+        BufferedImage image = getElevationFromHeightmap(xTile, zTile, Path.of(CONFIG1.CACHE_DIR + ELEV_CACHE_DIR), CONFIG1.ELEVATION_URL);
+
+        // 2. Computation: Convert to short[][]
+        short[][] elevation = toIntHeightmap(image);
+
+        // 3. Computation: Compute steepness
+        float[][] steepness = computeSteepnessMap(elevation);
+
+        // 4. Computation: Compute max
+        short maxElevation = computeMax(elevation);
+
+        return new TileData(elevation, steepness, maxElevation);
+    }
+
+    /**
+     * Helper method to submit the I/O task if not present, and then synchronously wait for the result.
+     * This method will only block the first time a tile is requested per tile coordinate.
+     */
+    private static TileData getTileBlocking(int xTile, int zTile) {
+        long key = pack(xTile, zTile);
+
+        // Use computeIfAbsent to submit the task only once.
+        Future<TileData> future = tileFutures.computeIfAbsent(key, k -> {
+            LOGGER.debug("Submitting tile load task for ({}, {}) to background executor.", xTile, zTile);
+            return IO_EXECUTOR.submit(() -> loadAndComputeTile(xTile, zTile));
+        });
+
+        try {
+            // CRITICAL: .get() blocks the current thread (game thread) until the result is available.
+            return future.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.error("Thread interrupted while waiting for tile ({}, {}).", xTile, zTile);
+            tileFutures.remove(key); // Remove failed future
+            return TileData.DUMMY;
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to execute tile load task for ({}, {}): {}", xTile, zTile, e.getCause().getMessage());
+            tileFutures.remove(key); // Remove failed future
+            return TileData.DUMMY;
+        }
+    }
 
     public static void init(){
         size = (int) (256 * Math.pow(2, CONFIG.zoom));
@@ -103,44 +157,64 @@ public class HeightProvider {
                 float dz = (elevationTile[x][z+1] - elevationTile[x][z-1]) / 2.0f;
 
                 // Steepness = magnitude of gradient
-                steepness[x][z] = (float) Math.sqrt(dx * dx + dz * dz) / ((float) CONFIG.worldHeight / 100);
+                steepness[x][z] = (float) Math.sqrt(dx * dx + dz * dz);
         }
         return steepness;
     }
 
-    public static short[] computeMinMax(short[][] elevationTile){
-        short max = Short.MIN_VALUE;
-        short min = Short.MAX_VALUE;
-
-        for (short[] arr : elevationTile) for (short elevation : arr) {
-               max = elevation > max ? elevation : max;
-               min = elevation < min ? elevation : min;
+    public static short computeMax(short[][] elevationTile){
+        // Check for an empty or null array to prevent errors.
+        if (elevationTile == null || elevationTile.length == 0 || elevationTile[0].length == 0) {
+            return Short.MIN_VALUE; // Return the smallest possible short if array is invalid.
         }
-        return new short[]{min, max};
-    }
 
+        // Initialize maxElevation with the smallest possible short value.
+        short maxElevation = Short.MIN_VALUE;
+
+        // Iterate through each row of the 2D array.
+        for (short[] row : elevationTile) {
+            // Iterate through each short value in the current row.
+            for (short value : row) {
+                // Compare the current value with the stored maximum.
+                if (value > maxElevation) {
+                    maxElevation = value; // Update maxElevation if a larger value is found.
+                }
+            }
+        }
+
+        return maxElevation;
+    }
 
     public static short getElevation(int xx, int zz) {
         int x = xx + CONFIG.adjustXoffset;
         int z = zz + CONFIG.adjustZoffset;
-        if(elevMap.size() > 16) elevMap.clear();
-        return elevMap.computeIfAbsent(pack(x >> 8, z >> 8), k -> toIntHeightmap(getElevationFromHeightmap(x >> 8, z >> 8, Path.of(CONFIG1.CACHE_DIR + ELEV_CACHE_DIR), CONFIG1.ELEVATION_URL)))[x & 0xFF][z & 0xFF];
+
+        // Call the helper function which handles the Future<TileData> resolution
+        TileData tile = getTileBlocking(x >> 8, z >> 8);
+
+        // Access the data from the resolved TileData object
+        return tile.elevation[x & 0xFF][z & 0xFF];
     }
+
     public static float getSteepness(int xx, int zz){
         int x = xx + CONFIG.adjustXoffset;
         int z = zz + CONFIG.adjustZoffset;
-        if(steepMap.size() > 16) steepMap.clear();
-        return steepMap.computeIfAbsent(pack(x >> 8, z >> 8),k -> computeSteepnessMap(elevMap.computeIfAbsent(pack(x >> 8, z >> 8), j -> toIntHeightmap(getElevationFromHeightmap(x >> 8, z >> 8, Path.of(CONFIG1.CACHE_DIR + ELEV_CACHE_DIR), CONFIG1.ELEVATION_URL)))))[x & 0xFF][z & 0xFF];
+
+        // Call the helper function which handles the Future<TileData> resolution
+        TileData tile = getTileBlocking(x >> 8, z >> 8);
+
+        // Access the data from the resolved TileData object
+        return tile.steepness[x & 0xFF][z & 0xFF];
     }
-    public static short[] getMinMax(int xx, int zz){
+
+    public static short getMax(int xx, int zz){
         int x = xx + CONFIG.adjustXoffset;
         int z = zz + CONFIG.adjustZoffset;
-        if(minMaxMap.size() > 16) minMaxMap.clear();
-        return minMaxMap.computeIfAbsent(pack(x >> 8, z >> 8), k -> computeMinMax(elevMap.computeIfAbsent(pack(x >> 8, z >> 8), j -> toIntHeightmap(getElevationFromHeightmap(x >> 8, z >> 8, Path.of(CONFIG1.CACHE_DIR + ELEV_CACHE_DIR), CONFIG1.ELEVATION_URL)))));
-    }
-    public static short getWaterElevation(int x, int z){
-        return waterMap.computeIfAbsent(pack(x >> 8, z >> 8), k -> toIntHeightmap(getElevationFromHeightmap(x >> 8, z >> 8, Path.of(CONFIG1.CACHE_DIR + WATER_CACHE_DIR), CONFIG1.WATER_URL)))[x & 0xFF][z & 0xFF];
-    }
 
+        // Call the helper function which handles the Future<TileData> resolution
+        TileData tile = getTileBlocking(x >> 8, z >> 8);
 
+        // Access the data from the resolved TileData object
+        return tile.maxElevation;
+    }
 }

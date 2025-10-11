@@ -9,7 +9,6 @@ version = "${version}"
 displayName = "terrarium"
 authors = ""
 description = '''
-
 '''
 #logoFile = ""
 
@@ -18,12 +17,12 @@ modId = "neoforge"
 type = "required"
 versionRange = "[21,)"
 ordering = "NONE"
-side = "BOTH"
+side = "SERVER"
 
 [[dependencies.terrarium]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.1,)"
+versionRange = "[1.21.8,)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -32,7 +31,7 @@ modId = "architectury"
 type = "required"
 versionRange = "[13.0.8,)"
 ordering = "AFTER"
-side = "BOTH"
+side = "SERVER"
 
 [[mixins]]
 config = "terrarium.mixins.json"
