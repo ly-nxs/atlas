@@ -1,0 +1,11 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:normal",
+    "terrarium:terrarium",
+    "minecraft:flat",
+    "minecraft:large_biomes",
+    "minecraft:amplified",
+    "minecraft:single_biome_surface"
+  ]
+}
