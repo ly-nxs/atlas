@@ -3,16 +3,22 @@ package xyz.lynxs.terrarium.gen;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import xyz.lynxs.terrarium.Terrarium;
+import xyz.lynxs.terrarium.Util;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -28,9 +34,11 @@ import static xyz.lynxs.terrarium.Util.pack;
 
 public class BiomeProvider {
 
-    private static final String CACHE_DIR = "/biomes/";
+    private static final String CACHE_DIR = "/biome/";
     private static final Logger LOGGER = Terrarium.LOGGER;
     private static final int QUALITY = 7;
+
+    private static Connection connection = null;
 
     // --- CONCURRENCY SETUP ---
     // Dedicated thread pool for heavy I/O/Computation tasks. Use a small fixed pool.
@@ -86,9 +94,9 @@ public class BiomeProvider {
 
         biomeTemperature.put(6072275, -0.66);
         biomeTemperature.put(11655278, -0.33);
-        biomeTemperature.put(49408, 0.0);
-        biomeTemperature.put(1737786, -0.2);
-        biomeTemperature.put(8971063, 0.33);
+        biomeTemperature.put(49408, -0.25);
+        biomeTemperature.put(1737786, -0.5);
+        biomeTemperature.put(8971063, -0.1);
         biomeTemperature.put(14732139, 0.9);
         biomeTemperature.put(14440537, 0.33);
         biomeTemperature.put(6379956, 0.5);
@@ -96,6 +104,32 @@ public class BiomeProvider {
         biomeTemperature.put(7767588, 0.0);
         biomeTemperature.put(11649118, 0.66);
         biomeTemperature.put(79104, 0.33);
+
+        if(CONFIG1.USE_NEW_BIOME) {
+            Thread BIOME_DATA = getBiomeData();
+            BIOME_DATA.start();
+        }
+    }
+
+    private static @NotNull Thread getBiomeData() {
+        File cacheFile = Path.of(CONFIG1.CACHE_DIR).resolve("biome.gpkg").toFile();
+        return new Thread(() -> {
+            if (cacheFile.exists())
+                LOGGER.info("Biome data found");
+                else {
+                LOGGER.info("Fetching biome data...  This may take a while");
+                try (FileOutputStream fileOutputStream = new FileOutputStream(cacheFile)) {
+                    ReadableByteChannel readableByteChannel = Channels.newChannel(CONFIG1.NEW_BIOME_URL.toURL().openStream());
+                    FileChannel fileChannel = fileOutputStream.getChannel();
+                    fileChannel.transferFrom(readableByteChannel, 0, Integer.MAX_VALUE);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+                    connection = Util.connect(Path.of(CONFIG1.CACHE_DIR).resolve("biome.gpkg").toString());
+                    LOGGER.info("Biome data fetched");
+
+            }, "BIOME_DATA_FETCHER");
     }
 
     private static BufferedImage getClimateTileImage(int xTile, int zTile, Path cachePath, URI path) {
@@ -263,15 +297,41 @@ public class BiomeProvider {
     }
 
     public static double getHumidity(int xx, int zz){
-        int clim = getClimate(xx, zz);
-        if(!biomeHumidity.containsKey(clim)) {
-            LOGGER.error("No key for humidity: {}", clim);
+        /*
+        if(CONFIG1.USE_NEW_BIOME){
+            int x = xx + CONFIG.adjustXoffset;
+            int z = zz + CONFIG.adjustZoffset;
+            if(connection != null) {
+                EcoregionResult ecoregion = findEcoregion(connection, x, z, CONFIG.zoom);
+                LOGGER.info(ecoregion.toString());
+                return biomeHumidity.getOrDefault(Integer.parseInt(ecoregion.biomeNum()), 0.0);
+            }
+            LOGGER.error("New biome data not loaded");
         }
-        return biomeHumidity.getOrDefault(clim, 0.0);
+        */
+        return biomeHumidity.getOrDefault(getClimate(xx, zz), 0.0);
+
+
     }
 
     public static double getTemperature(int xx, int zz){
+        /*
+        if(CONFIG1.USE_NEW_BIOME){
+            int x = xx + CONFIG.adjustXoffset;
+            int z = zz + CONFIG.adjustZoffset;
+            if(connection != null) {
+                EcoregionResult ecoregion = findEcoregion(connection, x, z, CONFIG.zoom);
+                LOGGER.info(ecoregion.toString());
+                return biomeTemperature.getOrDefault(Integer.parseInt(ecoregion.biomeNum()), 0.0);
+            }
+            LOGGER.error("New biome data not loaded");
+        }
+        */
+
+
         return biomeTemperature.getOrDefault(getClimate(xx, zz), 0.0);
+
+
     }
 
     //TODO: actually do this

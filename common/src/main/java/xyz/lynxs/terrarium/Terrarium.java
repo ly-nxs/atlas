@@ -8,19 +8,15 @@ import dev.architectury.event.events.common.LifecycleEvent;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.lynxs.terrarium.gen.BiomeProvider;
 import xyz.lynxs.terrarium.gen.HeightProvider;
-import xyz.lynxs.terrarium.gen.TerrariumDimensionType;
 import xyz.lynxs.terrarium.preset.PresetConfig;
 
 import java.nio.file.Path;
@@ -39,12 +35,15 @@ public final class Terrarium {
     public static void onServerWorldLoad(MinecraftServer server) {
         CONFIG = load(CONFIG.getClass(), server.getWorldPath(LevelResource.ROOT).resolve("terrarium.json"), false);
         LOGGER.info("Terrarium World Loaded!");
+
     }
     public static void init() {
 
         CommandRegistrationEvent.EVENT.register(((commandDispatcher, commandBuildContext, commandSelection) -> register(commandDispatcher)));
         LOGGER.info("Terrarium mod initialized");
+        BiomeProvider.init();
         LifecycleEvent.SERVER_LEVEL_LOAD.register(k -> onServerWorldLoad(k.getServer()));
+
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {

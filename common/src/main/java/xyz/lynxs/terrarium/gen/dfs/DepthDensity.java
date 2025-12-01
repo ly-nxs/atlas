@@ -18,10 +18,23 @@ public record DepthDensity(int depth) implements DensityFunction.SimpleFunction 
                     .apply(instance, DepthDensity::new)));
     @Override
     public double compute(FunctionContext pos) {
-        /*
-            simple height based
-        */
-        return Math.clamp((double) (pos.blockY() - 64) / (CONFIG.worldHeight - 64), -1.0, 1.0);
+           /*
+        simple height based - centered at y=64
+    */
+        int centerY = 64;
+        int maxHeight = CONFIG.worldHeight;
+        int minHeight = -64; // or whatever your world's minimum is
+
+        double normalizedHeight;
+        if (pos.blockY() >= centerY) {
+            // Above center: map to [0, 1]
+            normalizedHeight = (double) (pos.blockY() - centerY) / (maxHeight - centerY);
+        } else {
+            // Below center: map to [-1, 0]
+            normalizedHeight = (double) (pos.blockY() - centerY) / (centerY - minHeight);
+        }
+
+        return Math.clamp(normalizedHeight, -1.0, 1.0);
     }
 
     @Override

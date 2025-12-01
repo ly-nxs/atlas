@@ -27,6 +27,7 @@ public class TerrariumCustomizeScreen extends Screen {
     private final CreateWorldScreen parent;
     private  Button doneButton, cancelButton;
     private Slider zoomSlider, worldHeightSlider, xOffsetSlider, zOffsetSlider;
+    private Button biomeTransition;
     private final PresetConfig config;
     private TerrariumScrollableWidget scrollWidget;
 
@@ -156,6 +157,7 @@ public class TerrariumCustomizeScreen extends Screen {
                 BiomeProvider.getTemperature(0, 0);
                 BiomeProvider.getHumidity(0, 0);
 
+                Terrarium.LOGGER.info("Preloading Finished...");
             }, MOD_ID + "_DATA_PRELOADING");
             thread.start();
 

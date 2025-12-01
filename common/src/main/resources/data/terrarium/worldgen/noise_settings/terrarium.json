@@ -1,5 +1,5 @@
 {
-  "aquifers_enabled": true,
+  "aquifers_enabled": false,
   "default_block": {
     "Name": "minecraft:stone"
   },
@@ -12,7 +12,7 @@
   "disable_mob_generation": false,
   "legacy_random_source": false,
   "noise": {
-    "height": 768,
+    "height": 384,
     "min_y": -64,
     "size_horizontal": 1,
     "size_vertical": 2
@@ -24,14 +24,25 @@
       "xz_scale": 1,
       "y_scale": 0.5
     },
-    "continents":  {
-      "type": "terrarium:continentalness"
+    "continents": {
+      "type": "terrarium:warp",
+      "input": {
+        "type": "terrarium:continentalness"
+      },
+      "scale": 3
     },
     "depth": {
-        "type": "terrarium:depth"
+      "type": "terrarium:depth"
     },
     "erosion": {
-        "type": "terrarium:erosion"
+      "type": "terrarium:erosion"
+    },
+    "preliminary_surface_level": {
+      "type": "minecraft:add",
+      "argument1": -4,
+      "argument2": {
+        "type": "terrarium:heightmap"
+      }
     },
     "final_density": {
       "type": "minecraft:min",
@@ -69,27 +80,33 @@
       "type": "terrarium:weirdness"
     },
     "temperature": {
-      "type": "terrarium:temperature",
-      "noise": {
-        "type": "minecraft:shifted_noise",
-        "noise": "minecraft:temperature_large",
-        "shift_x": "minecraft:shift_x",
-        "shift_y": 0,
-        "shift_z": "minecraft:shift_z",
-        "xz_scale": 0.25,
-        "y_scale": 0
+      "type": "terrarium:warp",
+      "input": {
+        "type": "terrarium:temperature",
+        "noise": {
+          "type": "minecraft:shifted_noise",
+          "noise": "minecraft:temperature_large",
+          "shift_x": "minecraft:shift_x",
+          "shift_y": 0,
+          "shift_z": "minecraft:shift_z",
+          "xz_scale": 0.25,
+          "y_scale": 0
+        }
       }
     },
     "vegetation": {
-      "type": "terrarium:humidity",
-      "noise": {
-        "type": "minecraft:shifted_noise",
-        "noise": "minecraft:vegetation_large",
-        "shift_x": "minecraft:shift_x",
-        "shift_y": 0,
-        "shift_z": "minecraft:shift_z",
-        "xz_scale": 0.25,
-        "y_scale": 0
+      "type": "terrarium:warp",
+      "input": {
+        "type": "terrarium:humidity",
+        "noise": {
+          "type": "minecraft:shifted_noise",
+          "noise": "minecraft:vegetation_large",
+          "shift_x": "minecraft:shift_x",
+          "shift_y": 0,
+          "shift_z": "minecraft:shift_z",
+          "xz_scale": 0.25,
+          "y_scale": 0
+        }
       }
     },
     "vein_gap": {

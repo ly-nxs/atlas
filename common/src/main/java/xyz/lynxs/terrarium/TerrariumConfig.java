@@ -17,6 +17,8 @@ public class TerrariumConfig {
     public URI WATER_URL = URI.create("https://data.lynxs.xyz/water/");
     public URI BIOME_URL = URI.create("https://data.lynxs.xyz/biome/");
     public String CACHE_DIR = "./tiles";
+    public Boolean USE_NEW_BIOME = false;
+    public URI NEW_BIOME_URL = URI.create("https://data.lynxs.xyz/biome.gpkg");
 
 
     private static final Gson GSON = new GsonBuilder()

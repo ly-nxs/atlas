@@ -1,9 +1,12 @@
 package xyz.lynxs.terrarium;
 
 
+import xyz.lynxs.terrarium.gen.EcoregionResult;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
+import java.sql.*;
 
 public class Util {
     private static final double EARTH_RADIUS = 6378137.0; // Standard Mercator Earth radius (meters)
@@ -19,6 +22,97 @@ public class Util {
     private static final Kernel kernel = new Kernel(3, 3, blurKernel); // 3x3 kernel
     private static final ConvolveOp op = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
 
+    private static final double WEB_MERCATOR_HALF_EXTENT = 20037508.34;
+
+    /**
+     * Converts pixel coordinates (x, z) from a 2D grid at a given zoom level
+     * into meters in the EPSG:3857 coordinate system (Web Mercator).
+     * * The grid (0, 0) is assumed to be the top-left corner.
+     * * @param xPixel The horizontal pixel coordinate (0 to MapSize - 1).
+     * @param zPixel The vertical pixel coordinate (0 to MapSize - 1), where Z increases downward.
+     * @param zoomLevel The zoom level (Z).
+     * @return A double array [X_3857, Y_3857] in meters.
+     */
+    public static double[] toWebMercator(int xPixel, int zPixel, int zoomLevel) {
+
+        // 1. Calculate the total map size in pixels for the given zoom level.
+        // The base tile size is 256. MapSize = 256 * 2^Z
+        long mapSizePixels = 256L << zoomLevel;
+
+        // 2. Calculate the resolution (meters per pixel).
+        // Total Web Mercator width is 2 * L.
+        double totalMapWidthMeters = 2 * WEB_MERCATOR_HALF_EXTENT;
+        double resolution = totalMapWidthMeters / mapSizePixels;
+
+        // 3. Calculate X_3857 coordinate (Horizontal)
+        // X starts at -L and increases as xPixel increases.
+        double x3857 = (xPixel * resolution) - WEB_MERCATOR_HALF_EXTENT;
+
+        // 4. Calculate Y_3857 coordinate (Vertical)
+        // Y starts at +L and decreases as zPixel increases (inverting the axis).
+        double y3857 = WEB_MERCATOR_HALF_EXTENT - (zPixel * resolution);
+
+        return new double[]{x3857, y3857};
+    }
+
+    /**
+     * Executes a spatial query against a GeoPackage/SpatiaLite database to find
+     * the ecoregion containing the specified point (X, Y in EPSG:3857).
+     *
+     * @param conn The active JDBC connection to the SpatiaLite database.
+     * @param x The X coordinate (longitude equivalent) in EPSG:3857 meters.
+     * @param z The Y coordinate (latitude equivalent) in EPSG:3857 meters.
+     * @return An EcoregionResult object with BIOME_NUM and BIOME_NAME, or null if no region is found.
+     */
+    public static EcoregionResult findEcoregion(Connection conn, int x, int z, int zoom) {
+        EcoregionResult result = null;
+        double[] webPoints = toWebMercator(x, z, zoom);
+        // 1. Create a WKT point from your coordinates
+        String wktPoint = "POINT(" + webPoints[0] + " " + webPoints[1] + ")";
+
+        // 2. The Spatial SQL Query: Selects the two required attributes
+        // The 'geom' column is not selected since it is only used in the WHERE clause.
+        String sql = "SELECT BIOME_NUM, BIOME_NAME " +
+                "FROM reprojected " +
+                // ST_Within uses the spatial index for quick candidate filtering
+                "WHERE ST_Within(ST_GeomFromText(?, 3857), geom) " +
+                "LIMIT 1"; // Stop after the first match
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Bind the WKT point to the prepared statement
+            pstmt.setString(1, wktPoint);
+
+            // Execute the query
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    // Extract the required attributes and create the result object
+                    String biomeNum = rs.getString("BIOME_NUM");
+                    String biomeName = rs.getString("BIOME_NAME");
+                    result = new EcoregionResult(biomeNum, biomeName);
+                }
+            }
+
+        } catch (SQLException e) {
+            // Use java.sql.SQLException for standard JDBC error handling
+            System.err.println("Database query failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static Connection connect(String gpkgPath){
+        try {
+            // 1. Load the SQLite JDBC driver (if not done automatically)
+            Class.forName("org.sqlite.JDBC");
+
+            // 2. Establish the connection to the .gpkg file
+            String url = "jdbc:sqlite:" + gpkgPath;
+            return DriverManager.getConnection(url);
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Converts latitude to grid Z coordinate (Web Mercator)

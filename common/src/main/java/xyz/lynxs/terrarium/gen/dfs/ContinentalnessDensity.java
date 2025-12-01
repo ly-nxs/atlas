@@ -15,15 +15,38 @@ import static xyz.lynxs.terrarium.gen.HeightProvider.*;
 public record ContinentalnessDensity(double depth) implements DensityFunction.SimpleFunction {
     public static final KeyDispatchDataCodec<ContinentalnessDensity> CODEC = KeyDispatchDataCodec.of(
             RecordCodecBuilder.mapCodec(instance -> instance.group(
-                            Codec.DOUBLE.optionalFieldOf("depth", 20.0).forGetter(ContinentalnessDensity::depth))
+                            Codec.DOUBLE.optionalFieldOf("depth", 16.0).forGetter(ContinentalnessDensity::depth))
                     .apply(instance, ContinentalnessDensity::new)));
     @Override
     public double compute(FunctionContext pos) {
         /*
             localized height
+            70h 57min 86max  70-57 /
         */
+        short[] maxMin = getMaxMin(pos.blockX(), pos.blockZ());
+        int elevation = getElevation(pos.blockX(), pos.blockZ());
+        int min = maxMin[1];
+        int max = maxMin[0];
 
-        return Mth.clamp((getMax(pos.blockX(), pos.blockZ()) - (getElevation(pos.blockX(), pos.blockZ()) + depth)) * -1.0, depth * -1.0, depth) / depth;
+        // Avoid division by zero
+        if (max == min) {
+            return 0.0;
+        }
+
+        int range = max - min;
+
+        // Normalize to [0, 1], then convert to [-1, 1]
+        double normalized = (double) (elevation - min) / range;
+        double centered = (normalized * 2.0) - 1.0;  // Now in [-1, 1]
+
+        // Scale by terrain variation (normalize range to some baseline)
+        // Adjust the divisor (e.g., 50.0) based on your typical height variations
+        double variationScale = Math.min(range / depth, 1.0);
+
+        double result = centered * variationScale;
+
+        // Clamp to [-1, 1] (though variationScale should handle this)
+        return Math.max(-1.0, Math.min(1.0, result));
     }
 
     @Override

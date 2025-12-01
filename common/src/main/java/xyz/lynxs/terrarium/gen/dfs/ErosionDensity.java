@@ -15,16 +15,20 @@ import static xyz.lynxs.terrarium.gen.HeightProvider.*;
 public record ErosionDensity(double coefficient) implements DensityFunction.SimpleFunction {
     public static final KeyDispatchDataCodec<ErosionDensity> CODEC = KeyDispatchDataCodec.of(
             RecordCodecBuilder.mapCodec(instance -> instance.group(
-                            Codec.DOUBLE.optionalFieldOf("coefficient", 1.25).forGetter(ErosionDensity::coefficient))
+                            Codec.DOUBLE.optionalFieldOf("coefficient", 2.0).forGetter(ErosionDensity::coefficient))
                     .apply(instance, ErosionDensity::new)));
     @Override
     public double compute(FunctionContext pos) {
-        /*
-            Steepness
-        */
+    /*
+        Steepness - scaled so flat=-1, 3 blocks=1
+    */
+        double steepness = getSteepness(pos.blockX(), pos.blockZ()) * 10;
+         // 3 blocks = 1.0
 
-        return Mth.clamp(getSteepness(pos.blockX(), pos.blockZ()) * coefficient, 0, 2) - 1.0;
+        // Map [0, 3] to [-1, 1]
+        double normalized = steepness * 2.0 - 1.0;
 
+        return Mth.clamp(normalized, -1.0, 1.0);
     }
 
     @Override

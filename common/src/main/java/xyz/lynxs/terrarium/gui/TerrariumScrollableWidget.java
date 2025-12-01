@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractScrollArea;
 
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
@@ -96,43 +97,45 @@ public abstract class TerrariumScrollableWidget extends AbstractScrollArea{
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean bl) {
         if (!this.visible || !this.active) {
             return false;
         }
         // First try child widgets
         for (AbstractWidget widget : childWidgets) {
-            if (widget.mouseClicked(mouseX, mouseY + 2 * this.getScrollAmount(), button)) {
+            if (widget.mouseClicked(new MouseButtonEvent(event.x(), event.y() + 2 * this.getScrollAmount(), event.buttonInfo()), bl)) {
                 return true;
             }
         }
 
         // Then handle scroll bar
-        if (button == 0 && mouseX >= this.getX() + this.width - 6) {
+        if (bl && event.x() >= this.getX() + this.width - 6) {
             this.scrolling = true;
             return true;
         }
 
-        return super.mouseClicked(mouseX, mouseY , button);
+        return super.mouseClicked(event, bl);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
         if (!this.visible || !this.active) {
             return false;
         }
+
         for (AbstractWidget widget : childWidgets) {
-            if (widget.mouseClicked(mouseX, mouseY + 2 * this.getScrollAmount(), button)) {
+            if (widget.mouseClicked(new MouseButtonEvent(event.x() + deltaX, event.y(),event.buttonInfo()), true)) {
                 return true;
             }
         }
+
         if (this.scrolling) {
             double scrollableHeight = this.contentHeight - this.height;
             double scrollDelta = deltaY / this.height * scrollableHeight;
             this.setScrollAmount(this.scrollAmount + scrollDelta);
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY , button);
+        return super.mouseDragged(event, deltaX, deltaY);
     }
 
 
@@ -145,9 +148,9 @@ public abstract class TerrariumScrollableWidget extends AbstractScrollArea{
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         this.scrolling = false;
-        return super.mouseReleased(mouseX, mouseY + this.getScrollAmount(), button);
+        return super.mouseReleased(event);
     }
 
     public double getScrollAmount() {

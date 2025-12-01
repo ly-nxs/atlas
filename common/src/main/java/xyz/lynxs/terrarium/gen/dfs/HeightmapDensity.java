@@ -19,7 +19,7 @@ public record HeightmapDensity(int depth) implements DensityFunction.SimpleFunct
                     .apply(instance, HeightmapDensity::new)));
     @Override
     public double compute(FunctionContext pos) {
-        return pos.blockY() > HeightProvider.getElevation(pos.blockX(), pos.blockZ()) + CONFIG.startingY ? -1 : 1;
+        return pos.blockY() > Math.max(HeightProvider.getElevation(pos.blockX(), pos.blockZ()), -60) ? -1 : 1;
     }
 
     @Override

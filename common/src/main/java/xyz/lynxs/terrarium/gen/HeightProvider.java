@@ -33,10 +33,10 @@ public class HeightProvider {
     public record TileData(
             short[][] elevation,
             float[][] steepness,
-            short maxElevation
+            short[] maxMinElevation
     ) {
         // Dummy data for error case
-        public static final TileData DUMMY = new TileData(new short[256][256], new float[256][256], (short) 0);
+        public static final TileData DUMMY = new TileData(new short[256][256], new float[256][256], new short[]{0,0});
     }
 
     // Dedicated thread pool for heavy I/O/Computation tasks
@@ -56,9 +56,9 @@ public class HeightProvider {
         float[][] steepness = computeSteepnessMap(elevation);
 
         // 4. Computation: Compute max
-        short maxElevation = computeMax(elevation);
+        short[] maxMinElevation = computeMaxMin(elevation);
 
-        return new TileData(elevation, steepness, maxElevation);
+        return new TileData(elevation, steepness, maxMinElevation);
     }
 
     /**
@@ -142,7 +142,7 @@ public class HeightProvider {
 
                 double elevation = (red * 256 + green + blue / 256.0) - 32768.0;
 
-                arr[i][j] = (short) ((elevation / 8850) * CONFIG.worldHeight);
+                arr[i][j] = (short) ((elevation / 8850) * (CONFIG.worldHeight - CONFIG.startingY));
         }
         return arr;
     }
@@ -162,14 +162,15 @@ public class HeightProvider {
         return steepness;
     }
 
-    public static short computeMax(short[][] elevationTile){
+    public static short[] computeMaxMin(short[][] elevationTile){
         // Check for an empty or null array to prevent errors.
         if (elevationTile == null || elevationTile.length == 0 || elevationTile[0].length == 0) {
-            return Short.MIN_VALUE; // Return the smallest possible short if array is invalid.
+            return new short[]{Short.MIN_VALUE, Short.MAX_VALUE}; // Return the smallest possible short if array is invalid.
         }
 
         // Initialize maxElevation with the smallest possible short value.
         short maxElevation = Short.MIN_VALUE;
+        short minElevation = Short.MAX_VALUE;
 
         // Iterate through each row of the 2D array.
         for (short[] row : elevationTile) {
@@ -179,10 +180,13 @@ public class HeightProvider {
                 if (value > maxElevation) {
                     maxElevation = value; // Update maxElevation if a larger value is found.
                 }
+                if(value < minElevation){
+                    minElevation = value;
+                }
             }
         }
 
-        return maxElevation;
+        return new short[]{(short) (maxElevation + CONFIG.startingY), (short) (minElevation + CONFIG.startingY)};
     }
 
     public static short getElevation(int xx, int zz) {
@@ -193,7 +197,7 @@ public class HeightProvider {
         TileData tile = getTileBlocking(x >> 8, z >> 8);
 
         // Access the data from the resolved TileData object
-        return tile.elevation[x & 0xFF][z & 0xFF];
+        return (short) (tile.elevation[x & 0xFF][z & 0xFF] + CONFIG.startingY);
     }
 
     public static float getSteepness(int xx, int zz){
@@ -207,7 +211,7 @@ public class HeightProvider {
         return tile.steepness[x & 0xFF][z & 0xFF];
     }
 
-    public static short getMax(int xx, int zz){
+    public static short[] getMaxMin(int xx, int zz){
         int x = xx + CONFIG.adjustXoffset;
         int z = zz + CONFIG.adjustZoffset;
 
@@ -215,6 +219,6 @@ public class HeightProvider {
         TileData tile = getTileBlocking(x >> 8, z >> 8);
 
         // Access the data from the resolved TileData object
-        return tile.maxElevation;
+        return tile.maxMinElevation;
     }
 }

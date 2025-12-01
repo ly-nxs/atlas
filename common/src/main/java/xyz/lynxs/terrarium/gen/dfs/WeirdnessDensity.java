@@ -20,12 +20,21 @@ public record WeirdnessDensity(int depth) implements DensityFunction.SimpleFunct
                     .apply(instance, WeirdnessDensity::new)));
     @Override
     public double compute(FunctionContext pos) {
-        /*
-            y compared to elevation
-        */
+    /*
+        y compared to elevation - 0 when y=elevation
+    */
+        int elevation = getElevation(pos.blockX(), pos.blockZ());
+        int y = pos.blockY();
 
+        // Avoid division by zero
+        if (elevation == 0) {
+            elevation = 1;
+        }
 
-        return Mth.clamp((double) pos.blockY() / (getElevation(pos.blockX(), pos.blockZ()) + CONFIG.startingY), 0, 2) - 1.0;
+        // Normalize the difference
+        double normalized = (double) (y - elevation) / Math.abs(elevation);
+
+        return Mth.clamp(normalized, -1.0, 1.0);
     }
 
     @Override

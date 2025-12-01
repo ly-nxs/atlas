@@ -15,6 +15,7 @@ public class TerrariumRegistries {
         Registry.register(BuiltInRegistries.DENSITY_FUNCTION_TYPE,Terrarium.id("humidity"), HumidityDensity.CODEC.codec());
         Registry.register(BuiltInRegistries.DENSITY_FUNCTION_TYPE,Terrarium.id("temperature"), TemperatureDensity.CODEC.codec());
         Registry.register(BuiltInRegistries.DENSITY_FUNCTION_TYPE,Terrarium.id("continentalness"), ContinentalnessDensity.CODEC.codec());
+        Registry.register(BuiltInRegistries.DENSITY_FUNCTION_TYPE,Terrarium.id("warp"), DomainWarpDensity.CODEC.codec());
     }
 }
 
